@@ -1,0 +1,6 @@
+.project
+.sass-cache/
+.settings/
+*.pyc
+node_modules/
+thumbs

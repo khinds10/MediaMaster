@@ -7,7 +7,6 @@ def getOneRow(db, sQLStatement):
     dbCursor = executeMySQL(db, sQLStatement)
     row = dbCursor.fetchone ()
     dbCursor.close()
-    print row
     if not (row is None):
         return row[0]
     return ''
@@ -21,7 +20,6 @@ def getAllRows(db, sQLStatement):
     return ''
     
 def executeMySQL(db, sQLStatement):
-    print sQLStatement
     dbCursor = db.cursor()
     dbCursor.execute (sQLStatement)
     db.commit()
