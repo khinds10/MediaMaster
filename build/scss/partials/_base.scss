@@ -2,5 +2,33 @@
 	background-size: cover;
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
-	height: 150px;
+	height: 350px;
+	cursor: pointer;
+}
+
+.file-link {
+    color: black; 
+    font-size: 8px; 
+    position: absolute; 
+    margin-top: 300px;
+    padding: 10px;
+    text-align: center;
+}
+
+a:hover {
+    color: #CCC;
+    text-decoration: none;
+}
+
+.play-button-icon {
+	position: absolute; 
+	top: 0; 
+	right: 0;
+}
+
+.next-button-panel {
+	font-weight: bold; 
+	position: absolute; 
+	top: 50%; 
+	left: 30%;
 }

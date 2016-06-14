@@ -43,3 +43,24 @@ Now you can run your indexer to index media files.
 	$ python ./indexer/reindex.py
 
 *Note: If you would like to reindex at this time it's required you truncate the MySQL database tables first.*
+
+###Apache2 Config for Python CGI
+
+	<VirtualHost *:80>
+		ServerName mediamaster
+		ServerAlias mediamaster
+		ServerAdmin admin@mediamaster
+		DocumentRoot /var/www/MediaMaster
+		<Directory /var/www/MediaMaster>
+			Options FollowSymLinks
+			AllowOverride All
+			Require all granted
+		</Directory>
+		<Directory /var/www/MediaMaster/indexer>
+			Options FollowSymLinks
+			AllowOverride All
+			Require all granted
+	    	Options Indexes FollowSymLinks MultiViews ExecCGI
+	    	SetHandler cgi-script
+		</Directory>
+	</VirtualHost>

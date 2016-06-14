@@ -6,10 +6,17 @@ import cgi, json, MySQLdb
 import includes.mysql as mysql
 print "Content-type:application/json\r\n\r\n"
 
+# set the results page size
+pageSize = 50
+
+# connection to local DB
+db = MySQLdb.connect(host="localhost", user="user", passwd="password", db="media_master")
+
 thumbnailsRoot = 'thumbs'
 class Thumbail:
     image = ''
     fullPath = ''
+    fileType = ''
 
 def getThumbForId(id):
     return '/' + str(int(id/1000)) + '/' + str(id) + '.jpg'
@@ -40,6 +47,7 @@ whereVideoMimeTypes = " OR `mime_type` = ".join(videoMimeTypes)
 sortType = 'newest'
 mediaType = 'all'
 keyword = ''
+page = '0'
 arguments = cgi.FieldStorage()
 for i in arguments.keys():
 
@@ -52,8 +60,11 @@ for i in arguments.keys():
     if (arguments[i].name == "keyword"):
         keyword = arguments[i].value
 
-# connection to local DB
-db = MySQLdb.connect(host="localhost", user="user", passwd="password", db="media_master")
+    if (arguments[i].name == "page"):
+        page = arguments[i].value
+
+# page limit is the page number times the page size
+page = int(page) * int(pageSize)
 
 # create orderBy based on sortType search if provided
 orderBy = ''
@@ -63,8 +74,8 @@ if (sortType == "newest"):
 if (sortType == "oldest"):
     orderBy = 'ORDER BY `date_modified` ASC'
 
-if (sortType == "oldest"):
-    orderBy = 'ORDER BY `date_modified` ASC'
+if (sortType == "random"):
+    orderBy = 'ORDER BY RAND()'
 
 # create orderBy based on mediaType search if provided
 whereClauseMimeType = '`mime_type` = ' + whereImageMimeTypes + whereVideoMimeTypes
@@ -80,16 +91,30 @@ if keyword is not "":
     whereClauseKeyword = " AND `full_path` LIKE '%" + keyword + "%' "
 
 # build and execute query
-query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT 500"
+query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
 allFiles = mysql.getAllRows(db, query)
 
+#print len(allFiles)
+#exit()
+
+def getFileType(mimeType):
+    '''assign video or image file type based on known mime types '''
+    if mimeType.startswith( 'video/' ):
+        return 'video'
+    if mimeType.startswith( 'application/vnd' ):
+        return 'video'
+    if mimeType.startswith( 'audio/mpeg' ):
+        return 'video'
+    return 'image'
+
 # generate the JSON response of media files found
-print '['
+print '{"results":['
 for file in allFiles:
     fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
     thumbnail = Thumbail()
     thumbnail.image = thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath
+    thumbnail.fileType = getFileType(mimeType)
     print json.dumps(thumbnail.__dict__)
     print ','
-print '{}]'
+print '{}]}'

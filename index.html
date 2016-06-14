@@ -37,6 +37,23 @@
 					    <a class="navbar-brand" href="/">MediaMaster</a>
 				    </div>
 				    <div id="navbar" class="navbar-collapse collapse">
+					    <ul class="pagination navbar-right" style="margin:3px; padding: 5px; margin-left: 10px;">
+						    <li>
+						      <a href="#" aria-label="First" ng-click="firstPage()">
+						        <span aria-hidden="true">&lt;&lt;</span>
+						      </a>
+						    </li>
+						    <li>
+						      <a href="#" aria-label="Previous" ng-click="prevPage()">
+						        <span aria-hidden="true">&lt;</span>
+						      </a>
+						    </li>
+						    <li>
+						      <a href="#" aria-label="Next" ng-click="nextPage()">
+						        <span aria-hidden="true">&gt;</span>
+						      </a>
+						    </li>
+						  </ul>
 					    <form class="navbar-form navbar-right" role="form">
 						    <div class="form-group">
 						        <div class="btn-group">
@@ -63,9 +80,14 @@
 			    </div>
 		    </nav>
 		    <div class="container-fluid" style="margin-top: 50px;">
-			    <div class="row">
-				    <div ng-repeat="thumbnail in thumbnails" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');"></div>
-			    </div>
+			    <div class="row">			    
+				    <div ng-repeat="thumbnail in thumbnails track by $index" ng-click="viewFile(thumbnail.fullPath)" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');">
+				    <div class="next-button-panel" ng-hide="thumbnail.fileType">NEXT PAGE &gt;</div>
+				    <img class="play-button-icon" ng-show="(thumbnail.fileType=='video')" src="/img/play.png"/>
+                    <a class="file-link" href="" ng-click="viewFile(thumbnail.fullPath)">
+    				    {{thumbnail.fullPath}}
+				    </a>
+				</div>
 		    </div>
     		<!-- /container -->
     	</div>

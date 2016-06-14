@@ -2,7 +2,7 @@
 # Media Master Thumbnail Handler
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
-import Image, os, thumbs
+import Image, os, thumbs, subprocess, json
 from ffvideo import VideoStream
 
 def createFolderIfNotExists(folderName):
@@ -53,4 +53,4 @@ def createImageThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):
 def createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):
     videoImage = VideoStream(fullPath).get_frame_at_sec(int(getVideoDuration(fullPath) / 2)).image()
     videoImage.save('videoPreviewTemp.jpg')
-    createImageThumbnail(fileId, 'videoPreviewTemp.jpg')
+    createImageThumbnail(fileId, 'videoPreviewTemp.jpg', thumbnailSize, thumbnailsRoot)
