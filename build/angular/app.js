@@ -1,5 +1,6 @@
 /**
  * MediaMaster Angular JS App
+ *
  * @author Kevin Hinds @ kevinhinds.com
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */

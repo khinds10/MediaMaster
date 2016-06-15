@@ -48,7 +48,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
                 $scope.thumbnails = response.data.results;
             });
 		};
-        
+		
         // open file
 	    $scope.viewFile = function(fullPath) {
 	    	if (!fullPath) {
@@ -57,7 +57,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    		window.open(fullPath, fullPath, 'width=500,height=600');
 	    	}
 	    }
-		
+	    
         // setup the initial thumbnail results
         $scope.thumbnails = [];
         $scope.keyword = '';

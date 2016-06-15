@@ -61,6 +61,6 @@ for file in allFiles:
         print fullPath
         try:
             thumbs.createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot)
-        except:     
+        except:
             pass
         print
