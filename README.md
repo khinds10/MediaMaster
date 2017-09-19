@@ -1,6 +1,6 @@
-#MediaMaster - Python Media File Indexed HTML5 WebApp
+# MediaMaster - Python Media File Indexed HTML5 WebApp
 
-###UI Dependancies
+### UI Dependancies
 	To install dependancies and build:
 
 	Install "npm package manager" for the command line
@@ -8,7 +8,7 @@
 	$ npm install
 	$ grunt
 
-###Python Dependancies
+### Python Dependancies
 
 Required Packages:
 
@@ -18,13 +18,13 @@ Required Packages:
 
 	sudo pip install ffvideo
 
-###Create MySQL Schema
+### Create MySQL Schema
 
 Using a local instance of MySQL change the following lines to meet your local criteria for a database user that can create and access database tables.
 
 Connect to your local MySQL instance and run the **indexer/schema.sql** against it, this should create your DB tables needed to index and query local media files on your system, indentified by the folder names above.
 
-##Index your media files
+## Index your media files
 
 in the file indexer/reindex.py update your settings to local values
 
@@ -44,7 +44,7 @@ Now you can run your indexer to index media files.
 
 *Note: If you would like to reindex at this time it's required you truncate the MySQL database tables first.*
 
-###Apache2 Config for Python CGI
+### Apache2 Config for Python CGI
 
 	<VirtualHost *:80>
 		ServerName mediamaster
