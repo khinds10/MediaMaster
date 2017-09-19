@@ -30,11 +30,14 @@ for folder, subs, files in os.walk(mediaFilesRoot):
             with open(os.path.join(folder, filename), 'r') as fullPath:
                 fullPath = fullPath.name
                 (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
-                mimeType = mimes.magicMimeTypes.file(fullPath)
-                baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
-                thisFileName, fileExtension = os.path.splitext(fullPath)
-                directoryName = os.path.dirname(fullPath)
-                fileName = os.path.basename(fullPath)
+                try:
+                    mimeType = mimes.magicMimeTypes.file(fullPath)
+                    baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
+                    thisFileName, fileExtension = os.path.splitext(fullPath)
+                    directoryName = os.path.dirname(fullPath)
+                    fileName = os.path.basename(fullPath)
+                except:
+                    pass
                 print 
                 print '------------------ FILE FOUND ------------------------------'
                 print fullPath
