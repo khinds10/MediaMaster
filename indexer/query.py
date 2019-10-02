@@ -10,7 +10,7 @@ print "Content-type:application/json\r\n\r\n"
 pageSize = 50
 
 # connection to local DB
-db = MySQLdb.connect(host="localhost", user="user", passwd="password", db="media_master")
+db = MySQLdb.connect(host="localhost", user="user", passwd="pass", db="media_master")
 
 thumbnailsRoot = 'thumbs'
 class Thumbail:
@@ -23,24 +23,24 @@ def getThumbForId(id):
 
 # all the image mimeTypes
 imageMimeTypes = []
-imageMimeTypes.append('"image/gif; charset=binary"')
-imageMimeTypes.append('"image/jpeg; charset=binary"')
-imageMimeTypes.append('"image/png; charset=binary"')
-imageMimeTypes.append('"image/x-ms-bmp; charset=binary"')
+imageMimeTypes.append('"image/gif"')
+imageMimeTypes.append('"image/jpeg"')
+imageMimeTypes.append('"image/png"')
+imageMimeTypes.append('"image/x-ms-bmp"')
 whereImageMimeTypes = " OR `mime_type` = ".join(imageMimeTypes)
 
 # all the video mimeTypes
 videoMimeTypes = []
-videoMimeTypes.append('"application/ogg; charset=binary"')
-videoMimeTypes.append('"application/vnd.rn-realmedia; charset=binary"')
-videoMimeTypes.append('"audio/mpeg; charset=binary"')
-videoMimeTypes.append('"video/mp4; charset=binary"')
-videoMimeTypes.append('"video/mpeg; charset=binary"')
-videoMimeTypes.append('"video/quicktime; charset=binary"')
-videoMimeTypes.append('"video/webm; charset=binary"')
-videoMimeTypes.append('"video/x-flv; charset=binary"')
-videoMimeTypes.append('"video/x-ms-asf; charset=binary"')
-videoMimeTypes.append('"video/x-msvideo; charset=binary"')
+videoMimeTypes.append('"application/ogg"')
+videoMimeTypes.append('"application/vnd.rn-realmedia"')
+videoMimeTypes.append('"audio/mpeg"')
+videoMimeTypes.append('"video/mp4"')
+videoMimeTypes.append('"video/mpeg"')
+videoMimeTypes.append('"video/quicktime"')
+videoMimeTypes.append('"video/webm"')
+videoMimeTypes.append('"video/x-flv"')
+videoMimeTypes.append('"video/x-ms-asf"')
+videoMimeTypes.append('"video/x-msvideo"')
 whereVideoMimeTypes = " OR `mime_type` = ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
@@ -90,12 +90,12 @@ whereClauseKeyword = ""
 if keyword is not "":
     whereClauseKeyword = " AND `full_path` LIKE '%" + keyword + "%' "
 
+# for now remove the blank file extensions of those old flash files
+whereClauseKeyword = " AND `ext` != '' "
+
 # build and execute query
 query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
 allFiles = mysql.getAllRows(db, query)
-
-#print len(allFiles)
-#exit()
 
 def getFileType(mimeType):
     '''assign video or image file type based on known mime types '''

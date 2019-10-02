@@ -16,7 +16,9 @@ Required Packages:
 
 	sudo apt-get install python-dev cython libavcodec-dev libavformat-dev libswscale-dev python-pip
 
-	sudo pip install ffvideo
+	sudo -H pip install ffvideo
+	
+	sudo pip install opencv-python
 
 ### Create MySQL Schema
 

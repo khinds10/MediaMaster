@@ -2,8 +2,8 @@
 # Media Master Thumbnail Handler
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
-import Image, os, thumbs, subprocess, json
-from ffvideo import VideoStream
+import os, thumbs, subprocess, json, cv2
+from PIL import Image
 
 def createFolderIfNotExists(folderName):
     if not os.path.exists(folderName):
@@ -42,15 +42,48 @@ def getVideoDuration(videoFilePath):
     raise float(0)
 
 def createImageThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):
-    try:
-        im = Image.open(fullPath)
-        im.thumbnail(thumbnailSize)
-        thumbs.createFolderIfNotExists(getOutPutFolderName(fileId, thumbnailsRoot))
-        im.save(getOutPutFolderName(fileId, thumbnailsRoot) + "/" + str(fileId) +".jpg", "JPEG")
-    except:
-        print "cannot create thumbnail for", fullPath
+    im = Image.open(fullPath)
+    im = im.convert('RGB')
+    im.thumbnail(thumbnailSize)
+    thumbs.createFolderIfNotExists(getOutPutFolderName(fileId, thumbnailsRoot))
+    im.save(getOutPutFolderName(fileId, thumbnailsRoot) + "/" + str(fileId) +".jpg", "JPEG")
 
-def createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):
-    videoImage = VideoStream(fullPath).get_frame_at_sec(int(getVideoDuration(fullPath) / 2)).image()
-    videoImage.save('videoPreviewTemp.jpg')
+def video_to_frames(video_filename):
+    """Extract frames from video"""
+    cap = cv2.VideoCapture(video_filename)
+    video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+    frames = []
+    if cap.isOpened() and video_length > 0:
+        frame_ids = [0]
+        if video_length >= 2:
+            frame_ids = [round(video_length * 0.5)]
+        count = 0
+        success, image = cap.read()
+        while success:
+            if count in frame_ids:
+                frames.append(image)
+            success, image = cap.read()
+            count += 1
+    return frames
+
+def image_to_thumbs(img):
+    """Create thumbs from image"""
+    height, width, channels = img.shape
+    thumbs = {"original": img}
+    sizes = [256]
+    for size in sizes:
+        if (width >= size):
+            r = (size + 0.0) / width
+            max_size = (size, int(height * r))
+            thumbs[str(size)] = cv2.resize(img, max_size, interpolation=cv2.INTER_AREA)
+    return thumbs
+
+def createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):  
+  """generate and save thumbnail show 50% through the video"""
+  frames = video_to_frames(fullPath)
+  print "Generate and save thumbs"
+  for i in range(len(frames)):
+    thumb = image_to_thumbs(frames[i])
+    for k, v in thumb.items():
+      cv2.imwrite('videoPreviewTemp.jpg', v)
     createImageThumbnail(fileId, 'videoPreviewTemp.jpg', thumbnailSize, thumbnailsRoot)

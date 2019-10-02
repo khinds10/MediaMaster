@@ -1,0 +1,4 @@
+AuthName "Please login."
+AuthType Basic
+AuthUserFile /etc/apache2/.htpasswd
+require user khinds

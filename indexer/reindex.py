@@ -8,12 +8,12 @@ import includes.mysql as mysql
 import includes.thumbs as thumbs
 
 # connection to local DB
-db = MySQLdb.connect(host="localhost", user="user", passwd="password", db="media_master")
+db = MySQLdb.connect(host="localhost", user="user", passwd="pass", db="media_master")
 
 # file system references, create thumbnails root if necessary
-mediaFilesRoot = '/path/to/media/files/folder'
+mediaFilesRoot = "/path/to/media/files"
 thumbnailSize = 256, 256
-thumbnailsRoot = '/path/to/media/files/folder/thumbs'
+thumbnailsRoot = '/path/to/thumbs'
 
 # put this back below the recordDirectoryFound() function after thumbnailing is done
 for folder, subs, files in os.walk(mediaFilesRoot):
@@ -30,29 +30,26 @@ for folder, subs, files in os.walk(mediaFilesRoot):
             with open(os.path.join(folder, filename), 'r') as fullPath:
                 fullPath = fullPath.name
                 (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
-                try:
-                    mimeType = mimes.magicMimeTypes.file(fullPath)
-                    baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
-                    thisFileName, fileExtension = os.path.splitext(fullPath)
-                    directoryName = os.path.dirname(fullPath)
-                    fileName = os.path.basename(fullPath)
-                except:
-                    pass
+                mimeType = mimes.magicMimeTypes.file(fullPath)
+                baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
+                thisFileName, fileExtension = os.path.splitext(fullPath)
+                thisFileName = thisFileName
+                fileExtension = fileExtension
+                directoryName = os.path.dirname(fullPath)
+                fileName = os.path.basename(fullPath)
                 print 
                 print '------------------ FILE FOUND ------------------------------'
                 print fullPath
-                insertFileSQL = "INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ('" + str(fullPath) + "','" + str(directoryName) + "','" + str(baseName[0]) + "','" + str(fileExtension) + "','" + str(fileName) + "','" + str(mimeType) + "','" + str(size) + "',FROM_UNIXTIME(" + str(atime) + "),FROM_UNIXTIME(" + str(mtime) + "),'" + str(thisDirectoryID) + "')"
-                try:
-                    mysql.executeMySQL(db, insertFileSQL)
-                except:
-                    pass
+                insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
+                print insertFileSQL
+                mysql.executeMySQL(db, insertFileSQL)
 
 # get all files found and produce the preview thumbnails
 thumbs.createFolderIfNotExists(thumbnailsRoot)
 allFiles = mysql.getAllRows(db, "SELECT * FROM `files_list`")
 for file in allFiles:
     fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
-    
+    print mimeType
     if mimeType in mimes.imageMimeTypes:
         print "Creating Image Thumbnail: " + str(fileId)
         print fullPath
@@ -60,10 +57,11 @@ for file in allFiles:
         print
     
     if mimeType in mimes.videoMimeTypes:
-        print "Creating Image Thumbnail: " + str(fileId)
-        print fullPath
-        try:
+        print mimeType
+        print fileName.find(".mp4")
+        print fileName
+        if fileName.find(".mp4") > 0:
+            print "Creating Image Thumbnail: " + str(fileId)
+            print fullPath
             thumbs.createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot)
-        except:
-            pass
-        print
+            print
