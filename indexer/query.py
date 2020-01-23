@@ -88,10 +88,10 @@ if (mediaType == "videos"):
 # build the where clause 
 whereClauseKeyword = ""
 if keyword is not "":
-    whereClauseKeyword = " AND `full_path` LIKE '%" + keyword + "%' "
+    whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + keyword + "%' "
 
 # for now remove the blank file extensions of those old flash files
-whereClauseKeyword = " AND `ext` != '' "
+whereClauseKeyword = whereClauseKeyword + " AND `ext` != '' "
 
 # build and execute query
 query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
