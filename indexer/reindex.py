@@ -15,6 +15,18 @@ mediaFilesRoot = "/path/to/media/files"
 thumbnailSize = 256, 256
 thumbnailsRoot = '/path/to/thumbs'
 
+truncateDB = 'TRUNCATE `directories_list`'
+print truncateDB
+mysql.executeMySQL(db, truncateDB)
+
+truncateDB = 'TRUNCATE `files_list`'
+print truncateDB
+mysql.executeMySQL(db, truncateDB)
+
+truncateDB = 'TRUNCATE `text_list`'
+print truncateDB
+mysql.executeMySQL(db, truncateDB)
+
 # put this back below the recordDirectoryFound() function after thumbnailing is done
 for folder, subs, files in os.walk(mediaFilesRoot):
     folderDetails = folder.split('/')
