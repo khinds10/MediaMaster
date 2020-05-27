@@ -2,8 +2,9 @@
 # Media Master Thumbnail Handler
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
-import os, thumbs, subprocess, json, cv2
+import os, subprocess, json, cv2
 from PIL import Image
+import includes.thumbs as thumbs
 
 def createFolderIfNotExists(folderName):
     if not os.path.exists(folderName):
@@ -81,7 +82,7 @@ def image_to_thumbs(img):
 def createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot):  
   """generate and save thumbnail show 50% through the video"""
   frames = video_to_frames(fullPath)
-  print "Generate and save thumbs"
+  print("Generate and save thumbs")
   for i in range(len(frames)):
     thumb = image_to_thumbs(frames[i])
     for k, v in thumb.items():

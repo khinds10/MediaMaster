@@ -4,7 +4,7 @@
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
 import cgi, json, MySQLdb
 import includes.mysql as mysql
-print "Content-type:application/json\r\n\r\n"
+print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
 pageSize = 50
@@ -108,13 +108,13 @@ def getFileType(mimeType):
     return 'image'
 
 # generate the JSON response of media files found
-print '{"results":['
+print('{"results":[')
 for file in allFiles:
     fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
     thumbnail = Thumbail()
     thumbnail.image = thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath
     thumbnail.fileType = getFileType(mimeType)
-    print json.dumps(thumbnail.__dict__)
-    print ','
-print '{}]}'
+    print (json.dumps(thumbnail.__dict__))
+    print (',')
+print ('{}]}')
