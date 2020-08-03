@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `files_list` (
     `width` int(11) DEFAULT NULL,
     `height` int(11) DEFAULT NULL,
     `directory_id` int(11) DEFAULT NULL,
+    `thumnail_exists` int(11) DEFAULT 0,
     PRIMARY KEY (`file_id`),
     KEY `file_name` (`file_name`),
     KEY `full_path` (`full_path`),

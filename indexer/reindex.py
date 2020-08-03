@@ -6,29 +6,33 @@ import os, sys, re, subprocess, json, MySQLdb
 import includes.mimes as mimes
 import includes.mysql as mysql
 import includes.thumbs as thumbs
+import settings as settings
 
 # connection to local DB
-db = MySQLdb.connect(host="localhost", user="user", passwd="pass", db="media_master")
+db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
+try:
+    if sys.argv[1] == 'new':
+        truncateDB = 'TRUNCATE `directories_list`'
+        print(truncateDB)
+        mysql.executeMySQL(db, truncateDB)
 
-# file system references, create thumbnails root if necessary
-mediaFilesRoot = "/path/to/media/files"
-thumbnailSize = 256, 256
-thumbnailsRoot = '/path/to/thumbs'
+        truncateDB = 'TRUNCATE `files_list`'
+        print(truncateDB)
+        mysql.executeMySQL(db, truncateDB)
 
-truncateDB = 'TRUNCATE `directories_list`'
-print(truncateDB)
-mysql.executeMySQL(db, truncateDB)
-
-truncateDB = 'TRUNCATE `files_list`'
-print(truncateDB)
-mysql.executeMySQL(db, truncateDB)
-
-truncateDB = 'TRUNCATE `text_list`'
-print(truncateDB)
-mysql.executeMySQL(db, truncateDB)
+        truncateDB = 'TRUNCATE `text_list`'
+        print(truncateDB)
+        mysql.executeMySQL(db, truncateDB)
+        
+except IndexError:
+    print ()
+    print ('please provide a "new" or "update" as a flag for the indexer')
+    print ('usage: python3 reindex.py new|update')
+    print ()
+    exit()
 
 # put this back below the recordDirectoryFound() function after thumbnailing is done
-for folder, subs, files in os.walk(mediaFilesRoot):
+for folder, subs, files in os.walk(settings.mediaFilesRoot):
     folderDetails = folder.split('/')
     thisFolder = folderDetails.pop()
     parentFolder = '/'.join(folderDetails)
@@ -40,46 +44,63 @@ for folder, subs, files in os.walk(mediaFilesRoot):
     if thisDirectoryID > 0:
         for filename in files:
             with open(os.path.join(folder, filename), 'r') as fullPath:
+            
+                # build and execute query
                 fullPath = fullPath.name
-                (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
-                mimeType = mimes.magicMimeTypes.file(fullPath)
-                baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
-                thisFileName, fileExtension = os.path.splitext(fullPath)
-                thisFileName = thisFileName
-                fileExtension = fileExtension
-                directoryName = os.path.dirname(fullPath)
-                fileName = os.path.basename(fullPath)
-                print()
-                print('------------------ FILE FOUND ------------------------------')
-                print(fullPath)
-                insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
-                print(insertFileSQL)
-                mysql.executeMySQL(db, insertFileSQL)
+                query = "SELECT * FROM `files_list` WHERE `full_path` = \"" + fullPath + "\""
+                allFiles = mysql.getAllRows(db, query)
+                try:
+                    if allFiles[0][0]:
+                        pass
+                except:
+                    (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
+                    mimeType = mimes.magicMimeTypes.file(fullPath)
+                    baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
+                    thisFileName, fileExtension = os.path.splitext(fullPath)
+                    thisFileName = thisFileName
+                    fileExtension = fileExtension
+                    directoryName = os.path.dirname(fullPath)
+                    fileName = os.path.basename(fullPath)
+                    print()
+                    print('------------------ FILE FOUND ------------------------------')
+                    print(fullPath)
+                    insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
+                    print(insertFileSQL)
+                    mysql.executeMySQL(db, insertFileSQL)
+        db.commit()
 
 # get all files found and produce the preview thumbnails
-thumbs.createFolderIfNotExists(thumbnailsRoot)
+thumbs.createFolderIfNotExists(settings.thumbnailsRoot)
 allFiles = mysql.getAllRows(db, "SELECT * FROM `files_list`")
 for file in allFiles:
-    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
-    print(mimeType)
-    if mimeType in mimes.imageMimeTypes:
-        print("Creating Image Thumbnail: " + str(fileId))
-        print(fullPath)
-        try:
-            thumbs.createImageThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot)
-        except:
-          print("An exception occurred")
-        print()
-    
-    if mimeType in mimes.videoMimeTypes:
+    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumnail_exists = file
+    if thumnail_exists == 0:
+        print ('new file found')
         print(mimeType)
-        print(fileName.find(".mp4"))
-        print(fileName)
-        if fileName.find(".mp4") > 0:
+        print ()
+        if mimeType in mimes.imageMimeTypes:
             print("Creating Image Thumbnail: " + str(fileId))
             print(fullPath)
             try:
-                thumbs.createVideoThumbnail(fileId, fullPath, thumbnailSize, thumbnailsRoot)
+                thumbs.createImageThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
             except:
               print("An exception occurred")
             print()
+        
+        if mimeType in mimes.videoMimeTypes:
+            print(mimeType)
+            print(fileName.find(".mp4"))
+            print(fileName)
+            if fileName.find(".mp4") > 0:
+                print("Creating Image Thumbnail: " + str(fileId))
+                print(fullPath)
+                try:
+                    thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
+                except:
+                  print("An exception occurred")
+                print()
+                
+allThumbsUpdated = 'UPDATE `files_list` SET `thumnail_exists` = 1 WHERE TRUE;'
+print(allThumbsUpdated)
+mysql.executeMySQL(db, allThumbsUpdated)
+db.commit()

@@ -4,15 +4,16 @@
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
 import cgi, json, MySQLdb
 import includes.mysql as mysql
+import settings as settings
 print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
 pageSize = 50
 
 # connection to local DB
-db = MySQLdb.connect(host="localhost", user="user", passwd="pass", db="media_master")
+db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
 
-thumbnailsRoot = 'thumbs'
+settings.thumbnailsRoot = 'thumbs'
 class Thumbail:
     image = ''
     fullPath = ''
@@ -44,7 +45,7 @@ videoMimeTypes.append('"video/x-msvideo"')
 whereVideoMimeTypes = " OR `mime_type` = ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
-sortType = 'newest'
+sortType = 'random'
 mediaType = 'all'
 keyword = ''
 page = '0'
@@ -112,7 +113,7 @@ print('{"results":[')
 for file in allFiles:
     fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
     thumbnail = Thumbail()
-    thumbnail.image = thumbnailsRoot + getThumbForId(fileId)
+    thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath
     thumbnail.fileType = getFileType(mimeType)
     print (json.dumps(thumbnail.__dict__))
