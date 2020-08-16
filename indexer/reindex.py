@@ -2,7 +2,7 @@
 # Media Master Main File Indexer (run $ python ./indexer.py)
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
-import os, sys, re, subprocess, json, MySQLdb
+import os, sys, re, subprocess, json, MySQLdb, json
 import includes.mimes as mimes
 import includes.mysql as mysql
 import includes.thumbs as thumbs
@@ -43,30 +43,34 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
     thisDirectoryID = mysql.recordDirectoryFound(db, parentFolder, thisFolder)
     if thisDirectoryID > 0:
         for filename in files:
-            with open(os.path.join(folder, filename), 'r') as fullPath:
-            
+            with open(os.path.join(folder, filename), 'r') as fullPath:            
+
                 # build and execute query
                 fullPath = fullPath.name
-                query = "SELECT * FROM `files_list` WHERE `full_path` = \"" + fullPath + "\""
+                query = "SELECT * FROM `files_list` WHERE `full_path` = " + json.dumps(fullPath)
                 allFiles = mysql.getAllRows(db, query)
                 try:
                     if allFiles[0][0]:
                         pass
-                except:
-                    (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
-                    mimeType = mimes.magicMimeTypes.file(fullPath)
-                    baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
-                    thisFileName, fileExtension = os.path.splitext(fullPath)
-                    thisFileName = thisFileName
-                    fileExtension = fileExtension
-                    directoryName = os.path.dirname(fullPath)
-                    fileName = os.path.basename(fullPath)
-                    print()
-                    print('------------------ FILE FOUND ------------------------------')
-                    print(fullPath)
-                    insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
-                    print(insertFileSQL)
-                    mysql.executeMySQL(db, insertFileSQL)
+                except:            
+                    try:
+                        (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
+                        mimeType = mimes.magicMimeTypes.file(fullPath)
+                        baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
+                        thisFileName, fileExtension = os.path.splitext(fullPath)
+                        thisFileName = thisFileName
+                        fileExtension = fileExtension
+                        directoryName = os.path.dirname(fullPath)
+                        fileName = os.path.basename(fullPath)
+                        print()
+                        print('------------------ FILE FOUND ------------------------------')
+                        print(fullPath)
+                        insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES (' + json.dumps(fullPath) + ',' + json.dumps(directoryName) + ',' + json.dumps(baseName[0]) + ',' + json.dumps(fileExtension) + ',' + json.dumps(fileName) + ',' + json.dumps(mimeType) + ',' + json.dumps(size) + ',FROM_UNIXTIME(' + json.dumps(atime) + '),FROM_UNIXTIME(' + json.dumps(mtime) + '),' + json.dumps(thisDirectoryID) + ')'
+                        print(insertFileSQL)
+                        mysql.executeMySQL(db, insertFileSQL)                
+                    except:
+                        pass
+
         db.commit()
 
 # get all files found and produce the preview thumbnails

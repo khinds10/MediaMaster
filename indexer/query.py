@@ -111,7 +111,7 @@ def getFileType(mimeType):
 # generate the JSON response of media files found
 print('{"results":[')
 for file in allFiles:
-    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
+    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumnail_exists = file
     thumbnail = Thumbail()
     thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath

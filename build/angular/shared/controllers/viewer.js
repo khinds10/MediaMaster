@@ -62,6 +62,6 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
         $scope.thumbnails = [];
         $scope.keyword = '';
         $scope.mediaType = 'all';
-        $scope.sortType = 'newest';
+        $scope.sortType = 'random';
 		$scope.getResults();
 }]);
