@@ -28,6 +28,9 @@ imageMimeTypes.append('"image/gif"')
 imageMimeTypes.append('"image/jpeg"')
 imageMimeTypes.append('"image/png"')
 imageMimeTypes.append('"image/x-ms-bmp"')
+imageMimeTypes.append('"image/bmp"')
+imageMimeTypes.append('"image/x-tga"')
+imageMimeTypes.append('"image/webp"')
 whereImageMimeTypes = " OR `mime_type` = ".join(imageMimeTypes)
 
 # all the video mimeTypes
@@ -42,6 +45,9 @@ videoMimeTypes.append('"video/webm"')
 videoMimeTypes.append('"video/x-flv"')
 videoMimeTypes.append('"video/x-ms-asf"')
 videoMimeTypes.append('"video/x-msvideo"')
+videoMimeTypes.append('"audio/mp4"')
+videoMimeTypes.append('"video/x-m4v"')
+videoMimeTypes.append('"video/MP2T"')
 whereVideoMimeTypes = " OR `mime_type` = ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
