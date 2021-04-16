@@ -8,7 +8,7 @@ import settings as settings
 print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
-pageSize = 50
+pageSize = 12
 
 # connection to local DB
 db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
@@ -76,10 +76,10 @@ page = int(page) * int(pageSize)
 # create orderBy based on sortType search if provided
 orderBy = ''
 if (sortType == "newest"):
-    orderBy = 'ORDER BY `date_modified` DESC'
+    orderBy = 'ORDER BY `date_accessed` DESC'
 
 if (sortType == "oldest"):
-    orderBy = 'ORDER BY `date_modified` ASC'
+    orderBy = 'ORDER BY `date_accessed` ASC'
 
 if (sortType == "random"):
     orderBy = 'ORDER BY RAND()'
