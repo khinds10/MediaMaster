@@ -11,6 +11,12 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 		// current page
 		$scope.page = 0;
 	
+	    // current page
+		$scope.years = 1;
+	
+	    // sort default
+	    $scope.sortType = 'random';
+	
 		// first page
 		$scope.firstPage = function() {
 			$scope.page = 0;
@@ -37,9 +43,19 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
         	$scope.getResults();
 	    };
 
+        // set the sort based on the selected
+	    $scope.setYears = function(years) {
+        	$scope.years = years;
+        	$scope.getResults();
+	    };
+
+
         // load results with query parameters from python script
 		$scope.getResults = function() {
-		    urlQuery = '/indexer/query.py?mediaType=' + $scope.mediaType + '&sortType=' + $scope.sortType + '&keyword=' + $scope.keyword + '&page=' + $scope.page;
+		    var date = new Date();
+            var currentYear = date.getFullYear();
+		    var yearsAge = currentYear - $scope.years;
+		    urlQuery = '/indexer/query.py?mediaType=' + $scope.mediaType + '&sortType=' + $scope.sortType + '&keyword=' + $scope.keyword + '&page=' + $scope.page + '&year=' + yearsAge;
     		$scope.thumbnails = [];
             $http({
                 url : urlQuery,

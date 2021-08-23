@@ -5,10 +5,15 @@
 import cgi, json, MySQLdb
 import includes.mysql as mysql
 import settings as settings
+from datetime import date
+
 print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
-pageSize = 12
+pageSize = 50
+
+todaysDate = date.today()
+
 
 # connection to local DB
 db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
@@ -55,8 +60,12 @@ sortType = 'random'
 mediaType = 'all'
 keyword = ''
 page = '0'
+year = str(todaysDate.year)
 arguments = cgi.FieldStorage()
 for i in arguments.keys():
+
+    if (arguments[i].name == "year"):
+        year = arguments[i].value
 
     if (arguments[i].name == "sortType"):
         sortType = arguments[i].value
@@ -99,6 +108,9 @@ if keyword is not "":
 
 # for now remove the blank file extensions of those old flash files
 whereClauseKeyword = whereClauseKeyword + " AND `ext` != '' "
+
+# get the years back for which files to return by date modified
+whereClauseKeyword = whereClauseKeyword + " AND YEAR(date_modified) >= '" + year + "'"
 
 # build and execute query
 query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
