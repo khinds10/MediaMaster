@@ -13,15 +13,15 @@ db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.pas
 try:
     if sys.argv[1] == 'new':
         truncateDB = 'TRUNCATE `directories_list`'
-        print(truncateDB)
+        print (truncateDB)
         mysql.executeMySQL(db, truncateDB)
 
         truncateDB = 'TRUNCATE `files_list`'
-        print(truncateDB)
+        print (truncateDB)
         mysql.executeMySQL(db, truncateDB)
 
         truncateDB = 'TRUNCATE `text_list`'
-        print(truncateDB)
+        print (truncateDB)
         mysql.executeMySQL(db, truncateDB)
         
 except IndexError:
@@ -77,34 +77,34 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
 thumbs.createFolderIfNotExists(settings.thumbnailsRoot)
 allFiles = mysql.getAllRows(db, "SELECT * FROM `files_list`")
 for file in allFiles:
-    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumnail_exists = file
-    if thumnail_exists == 0:
+    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnail_exists = file
+    if thumbnail_exists == 0:
         print ('new file found')
-        print(mimeType)
+        print (mimeType)
         print ()
         if mimeType in mimes.imageMimeTypes:
-            print("Creating Image Thumbnail: " + str(fileId))
-            print(fullPath)
+            print ("Creating Image Thumbnail: " + str(fileId))
+            print (fullPath)
             try:
                 thumbs.createImageThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
             except:
               print("An exception occurred")
-            print()
+            print ()
         
         if mimeType in mimes.videoMimeTypes:
-            print(mimeType)
-            print(fileName.find(".mp4"))
-            print(fileName)
+            print (mimeType)
+            print (fileName.find(".mp4"))
+            print (fileName)
             if fileName.find(".mp4") > 0:
-                print("Creating Image Thumbnail: " + str(fileId))
-                print(fullPath)
+                print ("Creating Image Thumbnail: " + str(fileId))
+                print (fullPath)
                 try:
                     thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
                 except:
                   print("An exception occurred")
-                print()
+                print ()
                 
-allThumbsUpdated = 'UPDATE `files_list` SET `thumnail_exists` = 1 WHERE TRUE;'
+allThumbsUpdated = 'UPDATE `files_list` SET `thumbnail_exists` = 1 WHERE TRUE;'
 print(allThumbsUpdated)
 mysql.executeMySQL(db, allThumbsUpdated)
 db.commit()

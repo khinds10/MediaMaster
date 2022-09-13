@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Media Master Query Server
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
@@ -129,7 +129,7 @@ def getFileType(mimeType):
 # generate the JSON response of media files found
 print('{"results":[')
 for file in allFiles:
-    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumnail_exists = file
+    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnail_exists = file
     thumbnail = Thumbail()
     thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath

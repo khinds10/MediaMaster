@@ -67,6 +67,8 @@ CREATE TABLE `text_list` (
   KEY `file_name` (`file_name`),
   KEY `search_term` (`search_term`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE files_list ADD COLUMN thumbnail_exists int DEFAULT 0;
 ```
 
 Using a local instance of MySQL change the following lines to meet your local criteria for a database user that can create and access database tables.
