@@ -1,21 +1,31 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Media Master MySQL Handler
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
 import os, sys, re, subprocess, json, MySQLdb, json
  
 def getOneRow(db, sQLStatement):
-    dbCursor = executeMySQL(db, sQLStatement)
-    row = dbCursor.fetchone ()
-    dbCursor.close()
+
+    try:
+        dbCursor = executeMySQL(db, sQLStatement)
+        row = dbCursor.fetchone ()
+        dbCursor.close()
+    except:
+        row = None
+        
     if not (row is None):
         return row[0]
     return ''
     
 def getAllRows(db, sQLStatement):
-    dbCursor = executeMySQL(db, sQLStatement)
-    data = dbCursor.fetchall ()
-    dbCursor.close()
+
+    try:
+        dbCursor = executeMySQL(db, sQLStatement)
+        data = dbCursor.fetchall ()
+        dbCursor.close()
+    except:
+        row = None    
+    
     if not (data is None):
         return data
     return ''

@@ -11,9 +11,7 @@ print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
 pageSize = 50
-
 todaysDate = date.today()
-
 
 # connection to local DB
 db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
@@ -60,7 +58,7 @@ sortType = 'random'
 mediaType = 'all'
 keyword = ''
 page = '0'
-year = str(todaysDate.year)
+year = str(todaysDate.year-50)
 arguments = cgi.FieldStorage()
 for i in arguments.keys():
 
@@ -103,7 +101,7 @@ if (mediaType == "videos"):
 
 # build the where clause 
 whereClauseKeyword = ""
-if keyword is not "":
+if keyword != "":
     whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + keyword + "%' "
 
 # for now remove the blank file extensions of those old flash files
