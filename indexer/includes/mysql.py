@@ -24,7 +24,7 @@ def getAllRows(db, sQLStatement):
         data = dbCursor.fetchall ()
         dbCursor.close()
     except:
-        row = None    
+        data = None    
     
     if not (data is None):
         return data
