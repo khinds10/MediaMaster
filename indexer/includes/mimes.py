@@ -12,16 +12,22 @@ magicMimeTypes.load()
 imageMimeTypes = ['image/gif',
                   'image/jpeg',
                   'image/png',
-                  'image/x-ms-bmp']
+                  'image/x-ms-bmp',
+                  'image/bmp',
+                  'image/x-tga',
+                  'image/webp']
                   
 # list of video mimeTypes
 videoMimeTypes = ['application/ogg',
                   'application/vnd.rn-realmedia',
                   'audio/mpeg',
+                  'audio/mp4',
                   'video/mp4',
                   'video/mpeg',
                   'video/quicktime',
                   'video/webm',
                   'video/x-flv',
                   'video/x-ms-asf',
-                  'video/x-msvideo']
+                  'video/x-msvideo',
+                  'video/x-m4v',
+                  'video/MP2T']
