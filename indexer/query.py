@@ -88,7 +88,7 @@ if (mediaType == "videos"):
 
 # build the where clause 
 whereClauseKeyword = ""
-if keyword is not "":
+if keyword != "":
     whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + keyword + "%' "
 
 # for now remove the blank file extensions of those old flash files
@@ -111,7 +111,7 @@ def getFileType(mimeType):
 # generate the JSON response of media files found
 print('{"results":[')
 for file in allFiles:
-    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId = file
+    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnailExists = file
     thumbnail = Thumbail()
     thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
     thumbnail.fullPath = fullPath

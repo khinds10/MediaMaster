@@ -40,7 +40,15 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
     print(parentFolder)
     print(parentFolder + '/' + thisFolder)
     print()
-    thisDirectoryID = mysql.recordDirectoryFound(db, parentFolder, thisFolder)
+        
+    thisDirectoryID = 0
+    try:
+        thisDirectoryID = mysql.recordDirectoryFound(db, parentFolder, thisFolder)
+    except:
+        errorLog = open("errors.log", "a")
+        errorLog.write("Could not check if directory found: \"" + parentFolder + "\" -- \"" + thisFolder + "\"\n")
+        errorLog.close()  
+    
     if thisDirectoryID > 0:
         for filename in files:
             with open(os.path.join(folder, filename), 'r') as fullPath:
@@ -48,7 +56,16 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                 # build and execute query
                 fullPath = fullPath.name
                 query = "SELECT * FROM `files_list` WHERE `full_path` = \"" + fullPath + "\""
-                allFiles = mysql.getAllRows(db, query)
+                try:
+                    print ()
+                    print (query)
+                    print ()
+                    allFiles = mysql.getAllRows(db, query)
+                except:
+                    errorLog = open("errors.log", "a")
+                    errorLog.write("Could not check for file by query: \"" + query + "\"\n")
+                    errorLog.close()
+
                 try:
                     if allFiles[0][0]:
                         pass
@@ -66,7 +83,13 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                     print(fullPath)
                     insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
                     print(insertFileSQL)
-                    mysql.executeMySQL(db, insertFileSQL)
+                    try:
+                        mysql.executeMySQL(db, insertFileSQL)
+                    except:
+                        errorLog = open("errors.log", "a")
+                        errorLog.write("Could not perform insert query: \"" + insertFileSQL + "\"\n")
+                        errorLog.close()
+
         db.commit()
 
 # get all files found and produce the preview thumbnails
@@ -85,6 +108,9 @@ for file in allFiles:
                 thumbs.createImageThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
             except:
               print("An exception occurred")
+              errorLog = open("errors.log", "a")
+              errorLog.write("Could not generate thumbnail for IMAGE file: \"" +fullPath + "\"\n")
+              errorLog.close()              
             print()
         
         if mimeType in mimes.videoMimeTypes:
@@ -97,10 +123,13 @@ for file in allFiles:
                 try:
                     thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
                 except:
-                  print("An exception occurred")
+                    print("An exception occurred")
+                    errorLog = open("errors.log", "a")
+                    errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
+                    errorLog.close()    
                 print()
                 
-allThumbsUpdated = 'UPDATE `files_list` SET `thumnail_exists` = 1 WHERE TRUE;'
+allThumbsUpdated = 'UPDATE `files_list` SET `thumbnail_exists` = 1 WHERE TRUE;'
 print(allThumbsUpdated)
 mysql.executeMySQL(db, allThumbsUpdated)
 db.commit()
