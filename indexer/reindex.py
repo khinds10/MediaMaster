@@ -57,9 +57,6 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                 fullPath = fullPath.name
                 query = "SELECT * FROM `files_list` WHERE `full_path` = " + json.dumps(fullPath)
                 try:
-                    print ()
-                    print (query)
-                    print ()
                     allFiles = mysql.getAllRows(db, query)
                 except:
                     errorLog = open("errors.log", "a")
@@ -126,8 +123,15 @@ for file in allFiles:
                     errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
                     errorLog.close()    
                 print()
-                
+
+# all thumbnails are set to exist after generating them                
 allThumbsUpdated = 'UPDATE `files_list` SET `thumbnail_exists` = 1 WHERE TRUE;'
 print(allThumbsUpdated)
 mysql.executeMySQL(db, allThumbsUpdated)
+db.commit()
+
+# remove duplicate rows that might have been inserted
+removeDuplicateEntries = 'WITH duplicates AS (SELECT file_id, ROW_NUMBER() OVER (PARTITION BY full_path) rownum FROM files_list) DELETE FROM files_list WHERE file_id IN (SELECT file_id FROM duplicates WHERE rownum>1);'
+print(removeDuplicateEntries)
+mysql.executeMySQL(db, removeDuplicateEntries)
 db.commit()
