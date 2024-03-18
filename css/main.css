@@ -1,13 +1,39 @@
-.img { background-size: cover; background-position: 50% 50%; background-repeat: no-repeat; height: 350px; cursor: pointer; }
+.img {
+	background-size: cover;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	height: 350px;
+	cursor: pointer;
+}
 
-.file-link { color: black; font-size: 8px; position: absolute; margin-top: 300px; padding: 10px; text-align: center; }
+.file-link {
+    color: black; 
+    font-size: 8px; 
+    position: absolute; 
+    margin-top: 300px;
+    padding: 10px;
+    text-align: center;
+}
 
-a:hover { color: #CCC; text-decoration: none; }
+a:hover {
+    color: #CCC;
+    text-decoration: none;
+}
 
-.play-button-icon { position: absolute; top: 0; right: 0; }
+.play-button-icon {
+	position: absolute; 
+	top: 0; 
+	right: 0;
+}
 
-.next-button-panel { font-weight: bold; position: absolute; top: 50%; left: 30%; }
+.next-button-panel {
+	font-weight: bold; 
+	position: absolute; 
+	top: 50%; 
+	left: 30%;
+}
 
-h3 { color: white; font-size: 18px; }
-
-/*# sourceMappingURL=main.css.map */
+h3 {
+    color:white;
+    font-size: 18px;
+}

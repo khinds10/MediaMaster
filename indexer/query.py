@@ -83,10 +83,10 @@ page = int(page) * int(pageSize)
 # create orderBy based on sortType search if provided
 orderBy = ''
 if (sortType == "newest"):
-    orderBy = 'ORDER BY `date_accessed` DESC'
+    orderBy = 'ORDER BY `date_modified` DESC'
 
 if (sortType == "oldest"):
-    orderBy = 'ORDER BY `date_accessed` ASC'
+    orderBy = 'ORDER BY `date_modified` ASC'
 
 if (sortType == "random"):
     orderBy = 'ORDER BY RAND()'
@@ -111,8 +111,16 @@ whereClauseKeyword = whereClauseKeyword + " AND `ext` != '' "
 whereClauseKeyword = whereClauseKeyword + " AND YEAR(date_modified) >= '" + year + "'"
 
 # build and execute query
-query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
+if int(year) < 2000:
+    query = "SELECT f.* FROM files_list f INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
+
+if int(year) > 2000:
+    query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
+
 allFiles = mysql.getAllRows(db, query)
+
+
+
 
 def getFileType(mimeType):
     '''assign video or image file type based on known mime types '''
