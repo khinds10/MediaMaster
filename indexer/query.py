@@ -27,31 +27,31 @@ def getThumbForId(id):
 
 # all the image mimeTypes
 imageMimeTypes = []
-imageMimeTypes.append('"image/gif"')
-imageMimeTypes.append('"image/jpeg"')
-imageMimeTypes.append('"image/png"')
-imageMimeTypes.append('"image/x-ms-bmp"')
-imageMimeTypes.append('"image/bmp"')
-imageMimeTypes.append('"image/x-tga"')
-imageMimeTypes.append('"image/webp"')
-whereImageMimeTypes = " OR `mime_type` = ".join(imageMimeTypes)
+imageMimeTypes.append('"%image/gif%"')
+imageMimeTypes.append('"%image/jpeg%"')
+imageMimeTypes.append('"%image/png%"')
+imageMimeTypes.append('"%image/x-ms-bmp%"')
+imageMimeTypes.append('"%image/bmp%"')
+imageMimeTypes.append('"%image/x-tga%"')
+imageMimeTypes.append('"%image/webp%"')
+whereImageMimeTypes = " OR `mime_type` LIKE ".join(imageMimeTypes)
 
 # all the video mimeTypes
 videoMimeTypes = []
-videoMimeTypes.append('"application/ogg"')
-videoMimeTypes.append('"application/vnd.rn-realmedia"')
-videoMimeTypes.append('"audio/mpeg"')
-videoMimeTypes.append('"video/mp4"')
-videoMimeTypes.append('"video/mpeg"')
-videoMimeTypes.append('"video/quicktime"')
-videoMimeTypes.append('"video/webm"')
-videoMimeTypes.append('"video/x-flv"')
-videoMimeTypes.append('"video/x-ms-asf"')
-videoMimeTypes.append('"video/x-msvideo"')
-videoMimeTypes.append('"audio/mp4"')
-videoMimeTypes.append('"video/x-m4v"')
-videoMimeTypes.append('"video/MP2T"')
-whereVideoMimeTypes = " OR `mime_type` = ".join(videoMimeTypes)
+videoMimeTypes.append('"%application/ogg%"')
+videoMimeTypes.append('"%application/vnd.rn-realmedia%"')
+videoMimeTypes.append('"%audio/mpeg%"')
+videoMimeTypes.append('"%video/mp4%"')
+videoMimeTypes.append('"%video/mpeg%"')
+videoMimeTypes.append('"%video/quicktime%"')
+videoMimeTypes.append('"%video/webm%"')
+videoMimeTypes.append('"%video/x-flv%"')
+videoMimeTypes.append('"%video/x-ms-asf%"')
+videoMimeTypes.append('"%video/x-msvideo%"')
+videoMimeTypes.append('"%audio/mp4%"')
+videoMimeTypes.append('"%video/x-m4v%"')
+videoMimeTypes.append('"%video/MP2T%"')
+whereVideoMimeTypes = " OR `mime_type` LIKE ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
 sortType = 'random'
@@ -92,23 +92,49 @@ if (sortType == "random"):
     orderBy = 'ORDER BY RAND()'
 
 # create orderBy based on mediaType search if provided
-whereClauseMimeType = '`mime_type` = ' + whereImageMimeTypes + whereVideoMimeTypes
+whereClauseMimeType = '`mime_type` LIKE ' + whereImageMimeTypes + whereVideoMimeTypes
 if (mediaType == "images"):
-    whereClauseMimeType = '`mime_type` = ' + whereImageMimeTypes
+    whereClauseMimeType = '`mime_type` LIKE ' + whereImageMimeTypes
 
 if (mediaType == "videos"):
-    whereClauseMimeType = '`mime_type` = ' + whereVideoMimeTypes
+    whereClauseMimeType = '`mime_type` LIKE ' + whereVideoMimeTypes
 
 # build the where clause 
 whereClauseKeyword = ""
 if keyword != "":
-    whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + keyword + "%' "
+    # Split the keyword by minus sign and tilde
+    keywords = keyword.replace('-', ' -').replace('~', ' ~').split()
+    
+    # Initialize include and exclude lists
+    include_keywords = []
+    exclude_keywords = []
+    
+    # Process the keywords
+    for kw in keywords:
+        if kw.startswith('-'):
+            exclude_keywords.append(kw[1:])
+        elif kw.startswith('~'):
+            include_keywords.append(kw[1:])
+        else:
+            # The first keyword without a modifier is the main keyword
+            main_keyword = kw
+    
+    # Include the main keyword
+    whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + main_keyword + "%' "
+    
+    # Include additional keywords with the tilde modifier
+    for include_keyword in include_keywords:
+        whereClauseKeyword = whereClauseKeyword + " AND `full_path` LIKE '%" + include_keyword + "%' "
+    
+    # Exclude keywords with the minus sign modifier
+    for exclude_keyword in exclude_keywords:
+        whereClauseKeyword = whereClauseKeyword + " AND `full_path` NOT LIKE '%" + exclude_keyword + "%' "
 
 # for now remove the blank file extensions of those old flash files
 whereClauseKeyword = whereClauseKeyword + " AND `ext` != '' "
 
 # get the years back for which files to return by date modified
-whereClauseKeyword = whereClauseKeyword + " AND YEAR(date_modified) >= '" + year + "'"
+#whereClauseKeyword = whereClauseKeyword + " AND date_modified >= '" + year + "-01-01'"
 
 # build and execute query
 if int(year) < 2000:
@@ -118,9 +144,6 @@ if int(year) > 2000:
     query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
 
 allFiles = mysql.getAllRows(db, query)
-
-
-
 
 def getFileType(mimeType):
     '''assign video or image file type based on known mime types '''

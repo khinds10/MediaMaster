@@ -131,7 +131,7 @@ mysql.executeMySQL(db, allThumbsUpdated)
 db.commit()
 
 # remove duplicate rows that might have been inserted
-removeDuplicateEntries = 'WITH duplicates AS (SELECT file_id, ROW_NUMBER() OVER (PARTITION BY full_path) rownum FROM files_list) DELETE FROM files_list WHERE file_id IN (SELECT file_id FROM duplicates WHERE rownum>1);'
+removeDuplicateEntries = 'DELETE f1 FROM files_list f1 INNER JOIN (SELECT file_id, ROW_NUMBER() OVER (PARTITION BY full_path ORDER BY file_id) rownum FROM files_list) f2 ON f1.file_id = f2.file_id WHERE f2.rownum > 1;'
 print(removeDuplicateEntries)
 mysql.executeMySQL(db, removeDuplicateEntries)
 db.commit()
