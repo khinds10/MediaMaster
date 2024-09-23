@@ -17,6 +17,9 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    // sort default
 	    $scope.sortType = 'newest';
 	
+        // sort default modelPreview is shown
+	    $scope.modelPreview = false;
+	
 		// first page
 		$scope.firstPage = function() {
 			$scope.page = 0;
@@ -48,21 +51,50 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
         	$scope.years = years;
         	$scope.getResults();
 	    };
+	    
+        // set the sort based on the selected
+	    $scope.setModelPreview = function(modelPreview) {
+        	$scope.modelPreview = modelPreview;
+        	$scope.getResults();
+	    };	    
 
+        // Initialize exclusiveOption
+        $scope.exclusiveOption = null;
+
+        // Define setExclusiveOption function
+        $scope.setExclusiveOption = function(option) {
+            $scope.exclusiveOption = option;
+            $scope.getResults();
+        };
 
         // load results with query parameters from python script
 		$scope.getResults = function() {
 		    var date = new Date();
             var currentYear = date.getFullYear();
 		    var yearsAge = currentYear - $scope.years;
-		    urlQuery = '/indexer/query.py?mediaType=' + $scope.mediaType + '&sortType=' + $scope.sortType + '&keyword=' + $scope.keyword + '&page=' + $scope.page + '&year=' + yearsAge;
-    		$scope.thumbnails = [];
-            $http({
-                url : urlQuery,
-                method : "GET",
-            }).then(function(response) {
-                $scope.thumbnails = response.data.results;
-            });
+		    
+		    var urlQuery = '/indexer/query.py?' + 
+		        'mediaType=' + ($scope.mediaType || 'all') + 
+		        '&sortType=' + ($scope.sortType || 'newest') + 
+		        '&keyword=' + ($scope.keyword || '') + 
+		        '&page=' + ($scope.page || 0) + 
+		        '&year=' + yearsAge +
+		        '&modelPreview=' + $scope.modelPreview;
+
+		    // Add the exclusive option if set
+		    if ($scope.exclusiveOption) {
+		        urlQuery += '&' + $scope.exclusiveOption + '=true';
+		    }
+
+		    console.log(urlQuery);
+
+		    $scope.thumbnails = [];
+		    $http({
+		        url: urlQuery,
+		        method: "GET",
+		    }).then(function(response) {
+		        $scope.thumbnails = response.data.results;
+		    });
 		};
 		
         // open file
@@ -70,7 +102,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    	if (!fullPath) {
 	    		$scope.nextPage();
 	    	} else {
-	    		window.open(fullPath, fullPath, 'width=500,height=600');
+	    		window.open(fullPath, fullPath, 'width=1000,height=1200');
 	    	}
 	    }
 	    
@@ -79,5 +111,8 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
         $scope.keyword = '';
         $scope.mediaType = 'all';
         $scope.sortType = 'newest';
+        $scope.isGrown = false;
+        $scope.isExpanded = false;
+        $scope.isFeatured = false;
 		$scope.getResults();
 }]);

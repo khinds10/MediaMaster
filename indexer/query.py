@@ -59,6 +59,10 @@ mediaType = 'all'
 keyword = ''
 page = '0'
 year = str(todaysDate.year-50)
+grown = False
+expanded = False
+featured = False
+modelPreview = False
 arguments = cgi.FieldStorage()
 for i in arguments.keys():
 
@@ -76,6 +80,18 @@ for i in arguments.keys():
 
     if (arguments[i].name == "page"):
         page = arguments[i].value
+
+    if (arguments[i].name == "grown"):
+        grown = arguments[i].value.lower() == 'true'
+
+    if (arguments[i].name == "expanded"):
+        expanded = arguments[i].value.lower() == 'true'
+
+    if (arguments[i].name == "featured"):
+        featured = arguments[i].value.lower() == 'true'
+
+    if (arguments[i].name == "modelPreview"):
+        modelPreview = arguments[i].value.lower() == 'true'
 
 # page limit is the page number times the page size
 page = int(page) * int(pageSize)
@@ -136,14 +152,38 @@ whereClauseKeyword = whereClauseKeyword + " AND `ext` != '' "
 # get the years back for which files to return by date modified
 #whereClauseKeyword = whereClauseKeyword + " AND date_modified >= '" + year + "-01-01'"
 
+# Add conditions for grown, expanded, and featured
+folderConditions = []
+if grown:
+    folderConditions.append("`directory_name` LIKE '%GROWN%'")
+if expanded:
+    folderConditions.append("`directory_name` LIKE '%EXPANDED%'")
+if featured:
+    folderConditions.append("`directory_name` LIKE '%FEATURES%'")
+
+folderCondition = " AND " + " AND ".join(folderConditions) if folderConditions else ""
+
 # build and execute query
-if int(year) < 2000:
-    query = "SELECT f.* FROM files_list f INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
-
-if int(year) > 2000:
-    query = "SELECT * FROM `files_list` WHERE 1 AND (" + whereClauseMimeType + ") "+ whereClauseKeyword + " " + orderBy + " LIMIT " + str(page) + ", " + str(pageSize)
-
-allFiles = mysql.getAllRows(db, query)
+if modelPreview:
+    # Select 10 random folders
+    folder_query = "SELECT DISTINCT directory_name FROM files_list WHERE directory_name NOT LIKE '%diary%'ORDER BY RAND() LIMIT 10"
+    selected_folders = mysql.getAllRows(db, folder_query)
+    
+    # Prepare to collect files from the selected folders
+    allFiles = []
+    for folder in selected_folders:
+        folder_name = folder[0]
+        # Select 5 random files from each folder
+        file_query = f"SELECT * FROM files_list WHERE directory_name = '{folder_name}' AND ({whereClauseMimeType}) ORDER BY RAND() LIMIT 5"
+        files = mysql.getAllRows(db, file_query)
+        allFiles.extend(files)
+else:
+    if int(year) < 2000:
+        query = f"SELECT f.* FROM files_list f INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+    else:
+        query = f"SELECT * FROM `files_list` WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+    
+    allFiles = mysql.getAllRows(db, query)
 
 def getFileType(mimeType):
     '''assign video or image file type based on known mime types '''
