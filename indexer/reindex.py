@@ -37,8 +37,7 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
     thisFolder = folderDetails.pop()
     parentFolder = '/'.join(folderDetails)
     print()
-    print(parentFolder)
-    print(parentFolder + '/' + thisFolder)
+    print(parentFolder + '/' + thisFolder, end='\r')
     print()
         
     thisDirectoryID = 0
@@ -77,10 +76,15 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                         fileName = os.path.basename(fullPath)
                         print()
                         print('------------------ FILE FOUND ------------------------------')
-                        print(fullPath)
-                        insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
-                        print(insertFileSQL)
-                        mysql.executeMySQL(db, insertFileSQL)                
+                        print(fullPath, end='\r')
+
+                        # Check if fileName contains only friendly characters to insert into the DB
+                        if re.match(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};":\\|,.<>\/? ]+$', fileName):
+                            insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
+                            print(insertFileSQL, end='\r')
+                            mysql.executeMySQL(db, insertFileSQL)
+                        else:
+                            print(f"Skipping insertion for file: {fileName} due to invalid characters.", end='\r')
                     except:
                         errorLog = open("errors.log", "a")
                         errorLog.write("Could not perform insert query: \"" + insertFileSQL + "\"\n")
@@ -93,7 +97,7 @@ allFiles = mysql.getAllRows(db, "SELECT * FROM `files_list`")
 for file in allFiles:
     fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnail_exists = file
     if thumbnail_exists == 0:
-        print ('new file found')
+        print('Creating thumbnail for:', fullPath, end='\r')
         print (mimeType)
         print ()
         if mimeType in mimes.imageMimeTypes:
@@ -106,7 +110,7 @@ for file in allFiles:
               errorLog = open("errors.log", "a")
               errorLog.write("Could not generate thumbnail for IMAGE file: \"" +fullPath + "\"\n")
               errorLog.close()              
-            print()
+            print('Thumbnail created for:', fullPath, end='\r')
         
         if mimeType in mimes.videoMimeTypes:
             print (mimeType)
@@ -122,7 +126,7 @@ for file in allFiles:
                     errorLog = open("errors.log", "a")
                     errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
                     errorLog.close()    
-                print()
+                print('Thumbnail created for:', fullPath, end='\r')
 
 # all thumbnails are set to exist after generating them                
 allThumbsUpdated = 'UPDATE `files_list` SET `thumbnail_exists` = 1 WHERE TRUE;'
