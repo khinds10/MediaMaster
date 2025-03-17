@@ -43,3 +43,12 @@ CREATE TABLE IF NOT EXISTS `text_list` (
     KEY `search_term` (`search_term`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 TRUNCATE TABLE text_list;
+
+CREATE TABLE IF NOT EXISTS `favorites` (
+    `favorite_id` int(11) NOT NULL AUTO_INCREMENT,
+    `file_id` int(11) NOT NULL,
+    `date_added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`favorite_id`),
+    UNIQUE KEY `file_id` (`file_id`),
+    CONSTRAINT `fk_favorites_file` FOREIGN KEY (`file_id`) REFERENCES `files_list` (`file_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

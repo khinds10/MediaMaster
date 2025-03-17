@@ -17,6 +17,21 @@
       <link rel="stylesheet" href="/css/bootstrap.min.css">
       <link rel="stylesheet" href="/css/font-awesome.min.css">
       <link rel="stylesheet" href="/css/main.css">
+      <style>
+         .favorite-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: gold;
+            font-size: 20px;
+            cursor: pointer;
+            text-shadow: 0 0 3px black;
+            z-index: 10;
+         }
+         .img {
+            position: relative;
+         }
+      </style>
    </head>
    <body>
       <div ng-controller="viewerCtrl">
@@ -47,6 +62,9 @@
                         <label class="btn btn-primary" ng-class="{'active': exclusiveOption === 'featured'}">
                         <input type="radio" ng-model="exclusiveOption" value="featured" ng-change="setExclusiveOption('featured')"> Featured
                         </label>
+                        <label class="btn btn-primary" ng-class="{'active': favoritesMode}">
+                        <input type="checkbox" ng-model="favoritesMode" ng-change="toggleFavoritesMode()"> Favorites
+                        </label>
                      </div>
                      <div class="btn-group" uib-dropdown is-open="isopen">
                         <button id="single-button" type="button" class="btn btn-primary" uib-dropdown-toggle ng-disabled="disabled">
@@ -66,7 +84,7 @@
                            <li role="menuitem"><a ng-click="setYears(1)">&lt; 1 Year</a></li>
                            <li role="menuitem"><a ng-click="setYears(5)">&lt; 5 Years</a></li>
                            <li role="menuitem"><a ng-click="setYears(10)">&lt; 10 Years</a></li>
-                           <li role="menuitem"><a ng-click="setYears(50)">&lt; 50 Years</a></li>
+                           <li role="menuitem"><a ng-click="setYears(50)">&lt; All Time</a></li>
                         </ul>
                      </div>
                      <input type="text" placeholder="File / Folder Titles..." ng-model="keyword" class="form-control"/><br/>
@@ -105,13 +123,14 @@
             <!--/.navbar-collapse -->
          </div>
       </nav>
-      <div class="container-fluid" style="margin-top: 50px;">
+      <div class="container-fluid" style="margin-top: 185px;">
          <div class="row">
             <div ng-repeat="thumbnail in thumbnails track by $index" ng-click="viewFile(thumbnail.fullPath)" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');">
                <div class="next-button-panel" ng-hide="thumbnail.fileType">NEXT PAGE &gt;</div>
                <img class="play-button-icon" ng-show="(thumbnail.fileType=='video')" src="/img/play.png"/>
+               <i class="fa" ng-class="{'fa-star': thumbnail.isFavorite, 'fa-star-o': !thumbnail.isFavorite}" 
+                  ng-click="toggleFavorite(thumbnail, $event)" class="favorite-icon"></i>
                <a class="file-link" href="" ng-click="viewFile(thumbnail.fullPath)">
-               {{thumbnail.fullPath}}
                </a>
             </div>
          </div>
