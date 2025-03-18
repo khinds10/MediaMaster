@@ -8,6 +8,13 @@ import includes.mysql as mysql
 import includes.thumbs as thumbs
 import settings as settings
 
+# Function to print on the same line with proper clearing
+def print_status(message):
+    # Clear the line with spaces and carriage return to beginning
+    sys.stdout.write('\r' + ' ' * 200)  # Adjust the number based on your terminal width
+    sys.stdout.write('\r' + message)
+    sys.stdout.flush()
+
 # connection to local DB
 db = MySQLdb.connect(host=settings.host, user=settings.user, passwd=settings.passwd, db=settings.db)
 try:
@@ -36,9 +43,21 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
     folderDetails = folder.split('/')
     thisFolder = folderDetails.pop()
     parentFolder = '/'.join(folderDetails)
-    print()
-    print(parentFolder + '/' + thisFolder, end='\r')
-    print()
+
+    # Skip this folder if any part of the path contains a string from the excluded_folders list (case insensitive)
+    should_skip = False
+    folder_lower = folder.lower()
+    for excluded in settings.excluded_folders:
+        excluded_lower = excluded.lower()
+        # Check if any component in the path contains the excluded term
+        if excluded_lower in folder_lower:
+            should_skip = True
+            break
+    
+    if should_skip:
+        continue
+
+    print_status(parentFolder + '/' + thisFolder)
         
     thisDirectoryID = 0
     try:
@@ -74,8 +93,6 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                         fileExtension = fileExtension
                         directoryName = os.path.dirname(fullPath)
                         fileName = os.path.basename(fullPath)
-                        print()
-                        print('------------------ FILE FOUND ------------------------------')
                         print(fullPath, end='\r')
 
                         # Check if fileName contains only friendly characters to insert into the DB
@@ -106,23 +123,20 @@ for file in allFiles:
             try:
                 thumbs.createImageThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
             except:
-              print("An exception occurred")
+              print("\nAn exception occurred")  # Keep error printing on a new line
               errorLog = open("errors.log", "a")
               errorLog.write("Could not generate thumbnail for IMAGE file: \"" +fullPath + "\"\n")
               errorLog.close()              
             print('Thumbnail created for:', fullPath, end='\r')
         
         if mimeType in mimes.videoMimeTypes:
-            print (mimeType)
-            print (fileName.find(".mp4"))
-            print (fileName)
             if fileName.find(".mp4") > 0:
                 print ("Creating Image Thumbnail: " + str(fileId))
                 print (fullPath)
                 try:
                     thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
                 except:
-                    print("An exception occurred")
+                    print("\nAn exception occurred")  # Keep error printing on a new line
                     errorLog = open("errors.log", "a")
                     errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
                     errorLog.close()    
@@ -139,3 +153,6 @@ removeDuplicateEntries = 'DELETE f1 FROM files_list f1 INNER JOIN (SELECT file_i
 print(removeDuplicateEntries)
 mysql.executeMySQL(db, removeDuplicateEntries)
 db.commit()
+
+# Print newline at the end to separate from next command prompt
+print()

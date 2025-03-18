@@ -9,3 +9,6 @@ db_original="media_master_original"
 mediaFilesRoot = "/path/to/image/to/index"
 thumbnailSize = 256, 256
 thumbnailsRoot = '/path/to/thumbs/directory'
+
+# folders to exclude from indexing (case insensitive)
+excluded_folders = ["testing", "testing2"]

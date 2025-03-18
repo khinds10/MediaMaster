@@ -38,7 +38,6 @@ def executeMySQL(db, sQLStatement):
 
 def recordDirectoryFound(db, parentFolder, thisFolder):    
     sql = "SELECT `id` FROM `directories_list` WHERE `path` = " + json.dumps(parentFolder)
-    print (sql)
     rowDetails = getOneRow(db , sql)
     parentDirectoryID = 0
     try:
