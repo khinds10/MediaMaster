@@ -14,7 +14,7 @@ Required Packages:
 
 	sudo apt-get install python-magic
 
-	sudo apt-get install python-dev cython libavcodec-dev libavformat-dev libswscale-dev python-pip
+	sudo apt-get install python-dev cython libavcodec-dev libavformat-dev libswscale-dev python-pip python3-legacy-cgi
 
 	sudo -H pip install ffvideo
 	
