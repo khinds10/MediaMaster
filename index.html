@@ -31,6 +31,7 @@
          .img {
             position: relative;
          }
+
       </style>
    </head>
    <body>
@@ -125,17 +126,18 @@
       </nav>
       <div class="container-fluid" style="margin-top: 185px;">
          <div class="row">
-            <div ng-repeat="thumbnail in thumbnails track by $index" ng-click="viewFile(thumbnail.fullPath)" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');">
+            <div ng-repeat="thumbnail in thumbnails track by $index" ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height)" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');">
                <div class="next-button-panel" ng-hide="thumbnail.fileType">NEXT PAGE &gt;</div>
                <img class="play-button-icon" ng-show="(thumbnail.fileType=='video')" src="/img/play.png"/>
                <i class="fa" ng-class="{'fa-star': thumbnail.isFavorite, 'fa-star-o': !thumbnail.isFavorite}" 
                   ng-click="toggleFavorite(thumbnail, $event)" class="favorite-icon"></i>
-               <a class="file-link" href="" ng-click="viewFile(thumbnail.fullPath)">
+               <a class="file-link" href="" ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height)">
                </a>
             </div>
          </div>
          <!-- /container -->
       </div>
+      
       <!-- /viewerCtrl -->
    </body>
 </html>

@@ -97,7 +97,31 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
 
                         # Check if fileName contains only friendly characters to insert into the DB
                         if re.match(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};":\\|,.<>\/? ]+$', fileName):
-                            insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),"' + str(thisDirectoryID) + '")'
+                            # Extract image/video dimensions
+                            width = 0
+                            height = 0
+                            if mimeType in mimes.imageMimeTypes:
+                                try:
+                                    from PIL import Image
+                                    with Image.open(fullPath) as img:
+                                        width, height = img.size
+                                except:
+                                    # If we can't get dimensions, keep them as 0
+                                    width = 0
+                                    height = 0
+                            elif mimeType in mimes.videoMimeTypes:
+                                try:
+                                    import cv2
+                                    cap = cv2.VideoCapture(fullPath)
+                                    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                                    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                                    cap.release()
+                                except:
+                                    # If we can't get dimensions, keep them as 0
+                                    width = 0
+                                    height = 0
+                            
+                            insertFileSQL = 'INSERT INTO `files_list` (`full_path`,`directory_name`,`base_name`,`ext`,`file_name`,`mime_type`,`size`,`date_accessed`,`date_modified`,`width`,`height`,`directory_id`) VALUES ("' + str(fullPath) + '","' + str(directoryName) + '","' + str(baseName[0]) + '","' + str(fileExtension) + '","' + str(fileName) + '","' + str(mimeType) + '","' + str(size) + '",FROM_UNIXTIME(' + str(atime) + '),FROM_UNIXTIME(' + str(mtime) + '),' + str(width) + ',' + str(height) + ',"' + str(thisDirectoryID) + '")'
                             print(insertFileSQL, end='\r')
                             mysql.executeMySQL(db, insertFileSQL)
                         else:

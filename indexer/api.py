@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Media Master API Server
 # @author khinds
 # @license http://opensource.org/licenses/gpl-license.php GNU Public License
@@ -23,6 +23,8 @@ class Thumbail:
     fileType = ''
     fileId = 0
     isFavorite = False
+    width = 0
+    height = 0
 
 def getThumbForId(id):
     return '/' + str(int(id/1000)) + '/' + str(id) + '.jpg'
@@ -270,12 +272,21 @@ elif action == 'query':
     print('{"results":[')
     for file in allFiles:
         fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnailExists = file
+        
+        # Handle null width/height values
+        if width is None:
+            width = 0
+        if height is None:
+            height = 0
+            
         thumbnail = Thumbail()
         thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
         thumbnail.fullPath = fullPath
         thumbnail.fileType = getFileType(mimeType)
         thumbnail.fileId = fileId
         thumbnail.isFavorite = fileId in favorite_ids
+        thumbnail.width = width
+        thumbnail.height = height
         print (json.dumps(thumbnail.__dict__))
         print (',')
     print ('{}]}') 

@@ -132,11 +132,37 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 		};
 		
         // open file
-	    $scope.viewFile = function(fullPath) {
+	    $scope.viewFile = function(fullPath, width, height) {
 	    	if (!fullPath) {
 	    		$scope.nextPage();
 	    	} else {
-	    		window.open(fullPath, fullPath, 'width=1000,height=1200');
+	    		// Calculate window size based on image dimensions
+	    		var windowWidth, windowHeight;
+	    		var maxDimension = 800;
+	    		var padding = 50; // Add some padding for window borders
+	    		
+	    		console.log('Opening file:', fullPath, 'with dimensions:', width, 'x', height);
+	    		
+	    		if (width && height && width > 0 && height > 0) {
+	    			// Calculate proportional size with max dimension of 800
+	    			if (width > height) {
+	    				// Landscape image
+	    				windowWidth = Math.min(width, maxDimension) + padding;
+	    				windowHeight = Math.min(height * (maxDimension / width), maxDimension) + padding;
+	    			} else {
+	    				// Portrait image
+	    				windowHeight = Math.min(height, maxDimension) + padding;
+	    				windowWidth = Math.min(width * (maxDimension / height), maxDimension) + padding;
+	    			}
+	    			console.log('Calculated window size:', windowWidth, 'x', windowHeight);
+	    		} else {
+	    			// Fallback to default size if dimensions not available
+	    			windowWidth = 1000;
+	    			windowHeight = 1200;
+	    			console.log('Using default window size (dimensions not available):', windowWidth, 'x', windowHeight);
+	    		}
+	    		
+	    		window.open(fullPath, fullPath, 'width=' + windowWidth + ',height=' + windowHeight);
 	    	}
 	    }
 	    
