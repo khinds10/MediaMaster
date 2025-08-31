@@ -17,22 +17,6 @@
       <link rel="stylesheet" href="/css/bootstrap.min.css">
       <link rel="stylesheet" href="/css/font-awesome.min.css">
       <link rel="stylesheet" href="/css/main.css">
-      <style>
-         .favorite-icon {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            color: gold;
-            font-size: 20px;
-            cursor: pointer;
-            text-shadow: 0 0 3px black;
-            z-index: 10;
-         }
-         .img {
-            position: relative;
-         }
-
-      </style>
    </head>
    <body>
       <div ng-controller="viewerCtrl">
@@ -92,9 +76,9 @@
                   </div>
                   <button type="submit" class="btn btn-brand" ng-click="getResults()">Search</button>
                   <label class="btn btn-primary" ng-model="modelPreview" uib-btn-radio="'true'" ng-click="getResults()">PREVIEW</label>
-                  <div class="pagination-container" style="display: inline-block; vertical-align: middle; margin-left: 10px;">
+                  <div class="pagination-container">
                      <br/>
-                     <ul class="pagination" style="margin: 0;">
+                     <ul class="pagination">
                         <li>
                            <a href="#" aria-label="First" ng-click="firstPage()">
                            <span aria-hidden="true">&lt;&lt;</span>
@@ -117,23 +101,46 @@
                   </div>
             </form>
             <br/>
-            <small class="form-text text-muted" style="margin-top: 5px;">
+            <small class="form-text text-muted">
             Search 5px: Use '~' to include and '-' to exclude keywords (e.g., "~lilith -karla" includes "lilith" and excludes "karla")
             </small>
             </div>
             <!--/.navbar-collapse -->
          </div>
       </nav>
-      <div class="container-fluid" style="margin-top: 185px;">
-         <div class="row">
-            <div ng-repeat="thumbnail in thumbnails track by $index" ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height)" class="col-xs-2 img img-sm" style="background-image: url('{{thumbnail.image}}');">
-               <div class="next-button-panel" ng-hide="thumbnail.fileType">NEXT PAGE &gt;</div>
-               <img class="play-button-icon" ng-show="(thumbnail.fileType=='video')" src="/img/play.png"/>
-               <i class="fa" ng-class="{'fa-star': thumbnail.isFavorite, 'fa-star-o': !thumbnail.isFavorite}" 
-                  ng-click="toggleFavorite(thumbnail, $event)" class="favorite-icon"></i>
-               <a class="file-link" href="" ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height)">
-               </a>
+      <div class="container-fluid">
+         <div class="thumbnail-grid">
+                         <div ng-repeat="thumbnail in thumbnails track by $index" 
+                  class="thumbnail-item" 
+                  ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height, thumbnail.fileType)">
+               
+               <!-- Thumbnail image with aspect ratio preservation -->
+               <div class="thumbnail-container" ng-show="thumbnail.fileType">
+                  <img class="thumbnail-image" 
+                       ng-src="{{thumbnail.image}}" 
+                       ng-alt="Thumbnail"
+                       ng-style="{'aspect-ratio': thumbnail.width && thumbnail.height ? (thumbnail.width + '/' + thumbnail.height) : '1/1'}"
+                       loading="lazy"/>
+                  
+                  <!-- Play button for videos -->
+                  <img class="play-button-icon" 
+                       ng-show="thumbnail.fileType=='video'" 
+                       src="/img/play.png"/>
+                  
+                  <!-- Favorite star -->
+                  <i class="fa" 
+                     ng-class="{'fa-star': thumbnail.isFavorite, 'fa-star-o': !thumbnail.isFavorite}" 
+                     ng-click="toggleFavorite(thumbnail, $event)" 
+                     class="favorite-icon"></i>
+               </div>
             </div>
+         </div>
+         
+         <!-- Next page button at bottom -->
+         <div class="next-page-container" ng-show="thumbnails.length > 0">
+            <button class="btn btn-primary btn-lg next-page-button" ng-click="nextPage()">
+               <i class="fa fa-arrow-right"></i> Next Page
+            </button>
          </div>
          <!-- /container -->
       </div>

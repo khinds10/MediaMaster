@@ -132,7 +132,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 		};
 		
         // open file
-	    $scope.viewFile = function(fullPath, width, height) {
+	    $scope.viewFile = function(fullPath, width, height, fileType) {
 	    	if (!fullPath) {
 	    		$scope.nextPage();
 	    	} else {
@@ -141,7 +141,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    		var maxDimension = 800;
 	    		var padding = 50; // Add some padding for window borders
 	    		
-	    		console.log('Opening file:', fullPath, 'with dimensions:', width, 'x', height);
+	    		console.log('Opening file:', fullPath, 'with dimensions:', width, 'x', height, 'fileType:', fileType);
 	    		
 	    		if (width && height && width > 0 && height > 0) {
 	    			// Calculate proportional size with max dimension of 800
@@ -162,7 +162,38 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    			console.log('Using default window size (dimensions not available):', windowWidth, 'x', windowHeight);
 	    		}
 	    		
-	    		window.open(fullPath, fullPath, 'width=' + windowWidth + ',height=' + windowHeight);
+	    		// Check if it's a video file and create a muted video player
+	    		if (fileType === 'video') {
+	    			// Create a simple HTML page with muted video player
+	    			var videoHTML = `
+	    				<!DOCTYPE html>
+	    				<html>
+	    				<head>
+	    					<title>Video Player</title>
+	    					<style>
+	    						body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+	    						video { max-width: 100%; max-height: 100%; }
+	    					</style>
+	    				</head>
+	    				<body>
+	    					<video controls autoplay muted>
+	    						<source src="${fullPath}" type="video/mp4">
+	    						<source src="${fullPath}" type="video/webm">
+	    						<source src="${fullPath}" type="video/ogg">
+	    						Your browser does not support the video tag.
+	    					</video>
+	    				</body>
+	    				</html>
+	    			`;
+	    			
+	    			// Open in new window with video player
+	    			var videoWindow = window.open('', '_blank', 'width=' + windowWidth + ',height=' + windowHeight);
+	    			videoWindow.document.write(videoHTML);
+	    			videoWindow.document.close();
+	    		} else {
+	    			// For images, open directly
+	    			window.open(fullPath, fullPath, 'width=' + windowWidth + ',height=' + windowHeight);
+	    		}
 	    	}
 	    }
 	    

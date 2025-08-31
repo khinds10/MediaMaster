@@ -51,6 +51,10 @@ videoMimeTypes.append('"%video/x-msvideo%"')
 videoMimeTypes.append('"%audio/mp4%"')
 videoMimeTypes.append('"%video/x-m4v%"')
 videoMimeTypes.append('"%video/MP2T%"')
+videoMimeTypes.append('"%video/x-matroska%"')
+videoMimeTypes.append('"%video/x-ms-wmv%"')
+videoMimeTypes.append('"%video/avi%"')
+videoMimeTypes.append('"%video/x-avi%"')
 whereVideoMimeTypes = " OR `mime_type` LIKE ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
@@ -163,6 +167,19 @@ if featured:
 
 folderCondition = " AND " + " AND ".join(folderConditions) if folderConditions else ""
 
+# Add filter to exclude small videos when -LG versions exist
+lg_filter = ""
+if mediaType == "videos" or mediaType == "all":
+    lg_filter = """ AND NOT (
+        file_name NOT LIKE '%-LG%' 
+        AND EXISTS (
+            SELECT 1 FROM files_list f2 
+            WHERE f2.directory_name = files_list.directory_name 
+            AND f2.file_name = CONCAT(SUBSTRING_INDEX(files_list.file_name, '.', 1), '-LG.', SUBSTRING_INDEX(files_list.file_name, '.', -1))
+            AND f2.mime_type LIKE '%video%'
+        )
+    )"""
+
 # build and execute query
 if modelPreview:
     # Select 10 random folders
@@ -174,14 +191,14 @@ if modelPreview:
     for folder in selected_folders:
         folder_name = folder[0]
         # Select 5 random files from each folder
-        file_query = f"SELECT * FROM files_list WHERE directory_name = '{folder_name}' AND ({whereClauseMimeType}) ORDER BY RAND() LIMIT 5"
+        file_query = f"SELECT * FROM files_list WHERE directory_name = '{folder_name}' AND ({whereClauseMimeType}) {lg_filter} ORDER BY RAND() LIMIT 5"
         files = mysql.getAllRows(db, file_query)
         allFiles.extend(files)
 else:
     if int(year) < 2000:
-        query = f"SELECT f.* FROM files_list f INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+        query = f"SELECT f.* FROM files_list f INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {lg_filter} {orderBy} LIMIT {page}, {pageSize}"
     else:
-        query = f"SELECT * FROM `files_list` WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+        query = f"SELECT * FROM `files_list` WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {lg_filter} {orderBy} LIMIT {page}, {pageSize}"
     
     allFiles = mysql.getAllRows(db, query)
 

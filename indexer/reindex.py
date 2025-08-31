@@ -8,6 +8,61 @@ import includes.mysql as mysql
 import includes.thumbs as thumbs
 import settings as settings
 
+def createLargerVideoVersion(videoPath, originalWidth, originalHeight):
+    """
+    Create a larger version of a small video using ffmpeg.
+    The new video will be double the size and have -LG suffix.
+    """
+    # Calculate new dimensions (double the size)
+    newWidth = originalWidth * 2
+    newHeight = originalHeight * 2
+    
+    # Create the new filename with -LG suffix
+    directory = os.path.dirname(videoPath)
+    filename = os.path.basename(videoPath)
+    name, ext = os.path.splitext(filename)
+    newFilename = f"{name}-LG{ext}"
+    newPath = os.path.join(directory, newFilename)
+    
+    # Check if the larger version already exists
+    if os.path.exists(newPath):
+        print(f"Larger version already exists: {newPath}")
+        return newPath
+    
+    # Build ffmpeg command to resize the video
+    ffmpeg_cmd = [
+        'ffmpeg',
+        '-i', videoPath,
+        '-vf', f'scale={newWidth}:{newHeight}',
+        '-c:v', 'libx264',  # Use H.264 codec
+        '-c:a', 'copy',     # Copy audio without re-encoding
+        '-preset', 'medium', # Balance between speed and quality
+        '-crf', '23',       # Constant rate factor for quality
+        '-y',               # Overwrite output file if it exists
+        newPath
+    ]
+    
+    print(f"Creating larger video: {newPath}")
+    print(f"Original size: {originalWidth}x{originalHeight} -> New size: {newWidth}x{newHeight}")
+    
+    try:
+        # Run ffmpeg command
+        result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
+        
+        if result.returncode == 0:
+            print(f"Successfully created larger video: {newPath}")
+            return newPath
+        else:
+            print(f"FFmpeg error: {result.stderr}")
+            raise Exception(f"FFmpeg failed with return code {result.returncode}")
+            
+    except subprocess.TimeoutExpired:
+        print("FFmpeg process timed out")
+        raise Exception("FFmpeg process timed out")
+    except Exception as e:
+        print(f"Error running ffmpeg: {str(e)}")
+        raise e
+
 # Function to print on the same line with proper clearing
 def print_status(message):
     # Clear the line with spaces and carriage return to beginning
@@ -87,7 +142,7 @@ for folder, subs, files in os.walk(settings.mediaFilesRoot):
                     try:
                         (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fullPath)
                         mimeType = mimes.magicMimeTypes.file(fullPath)
-                        baseName = re.split('\.([^.]*)$', os.path.basename(fullPath))
+                        baseName = re.split(r'\.([^.]*)$', os.path.basename(fullPath))
                         thisFileName, fileExtension = os.path.splitext(fullPath)
                         thisFileName = thisFileName
                         fileExtension = fileExtension
@@ -154,17 +209,28 @@ for file in allFiles:
             print('Thumbnail created for:', fullPath, end='\r')
         
         if mimeType in mimes.videoMimeTypes:
-            if fileName.find(".mp4") > 0:
-                print ("Creating Image Thumbnail: " + str(fileId))
-                print (fullPath)
-                try:
-                    thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
-                except:
-                    print("\nAn exception occurred")  # Keep error printing on a new line
-                    errorLog = open("errors.log", "a")
-                    errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
-                    errorLog.close()    
-                print('Thumbnail created for:', fullPath, end='\r')
+            print ("Creating Video Thumbnail: " + str(fileId))
+            print (fullPath)
+            try:
+                # Check if video is small and create larger version if needed
+                if width > 0 and width < 400:
+                    print(f"Small video detected ({width}x{height}), creating larger version...")
+                    try:
+                        # Create larger version with -LG suffix
+                        createLargerVideoVersion(fullPath, width, height)
+                    except Exception as e:
+                        print(f"Error creating larger video version: {str(e)}")
+                        errorLog = open("errors.log", "a")
+                        errorLog.write(f"Could not create larger video version for: {fullPath} - Error: {str(e)}\n")
+                        errorLog.close()
+                
+                thumbs.createVideoThumbnail(fileId, fullPath, settings.thumbnailSize, settings.thumbnailsRoot)
+            except:
+                print("\nAn exception occurred")  # Keep error printing on a new line
+                errorLog = open("errors.log", "a")
+                errorLog.write("Could not generate thumbnail for VIDEO file: " +fullPath + "\n")
+                errorLog.close()    
+            print('Thumbnail created for:', fullPath, end='\r')
 
 # all thumbnails are set to exist after generating them                
 allThumbsUpdated = 'UPDATE `files_list` SET `thumbnail_exists` = 1 WHERE TRUE;'

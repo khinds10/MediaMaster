@@ -30,4 +30,8 @@ videoMimeTypes = ['application/ogg',
                   'video/x-ms-asf',
                   'video/x-msvideo',
                   'video/x-m4v',
-                  'video/MP2T']
+                  'video/MP2T',
+                  'video/x-matroska',
+                  'video/x-ms-wmv',
+                  'video/avi',
+                  'video/x-avi']

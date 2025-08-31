@@ -10,7 +10,7 @@ from datetime import date
 print("Content-type:application/json\r\n\r\n")
 
 # set the results page size
-pageSize = 50
+pageSize = 100
 todaysDate = date.today()
 
 # connection to local DB
@@ -55,6 +55,10 @@ videoMimeTypes.append('"%video/x-msvideo%"')
 videoMimeTypes.append('"%audio/mp4%"')
 videoMimeTypes.append('"%video/x-m4v%"')
 videoMimeTypes.append('"%video/MP2T%"')
+videoMimeTypes.append('"%video/x-matroska%"')
+videoMimeTypes.append('"%video/x-ms-wmv%"')
+videoMimeTypes.append('"%video/avi%"')
+videoMimeTypes.append('"%video/x-avi%"')
 whereVideoMimeTypes = " OR `mime_type` LIKE ".join(videoMimeTypes)
 
 # parse possible incoming query HTTP params
@@ -243,11 +247,24 @@ elif action == 'query':
         if favorites_only:
             base_query += " INNER JOIN favorites fav ON f.file_id = fav.file_id"
         
+        # Add filter to exclude small videos when -LG versions exist
+        lg_filter = ""
+        if mediaType == "videos" or mediaType == "all":
+            lg_filter = """ AND NOT (
+                f.file_name NOT LIKE '%-LG%' 
+                AND EXISTS (
+                    SELECT 1 FROM files_list f2 
+                    WHERE f2.directory_name = f.directory_name 
+                    AND f2.file_name = CONCAT(SUBSTRING_INDEX(f.file_name, '.', 1), '-LG.', SUBSTRING_INDEX(f.file_name, '.', -1))
+                    AND f2.mime_type LIKE '%video%'
+                )
+            )"""
+        
         # For random folder selection
         if int(year) < 2000 and not favorites_only:
-            query = f"{base_query} INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+            query = f"{base_query} INNER JOIN (SELECT DISTINCT directory_name FROM files_list ORDER BY RAND() LIMIT 1) AS random_dir ON f.directory_name = random_dir.directory_name WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {lg_filter} {orderBy} LIMIT {page}, {pageSize}"
         else:
-            query = f"{base_query} WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {orderBy} LIMIT {page}, {pageSize}"
+            query = f"{base_query} WHERE 1 AND ({whereClauseMimeType}) {whereClauseKeyword} {folderCondition} {lg_filter} {orderBy} LIMIT {page}, {pageSize}"
         
         allFiles = mysql.getAllRows(db, query)
     
