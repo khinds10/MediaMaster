@@ -9,8 +9,8 @@
       <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
       <link rel="icon" href="/img/favicon.ico" type="image/x-icon" />
       <script src="/node_modules/angular/angular.min.js"></script>
-      <script src="/node_modules/angular-ui-bootstrap/ui-bootstrap.min.js"></script>
-      <script src="/node_modules/angular-ui-bootstrap/ui-bootstrap-tpls.min.js"></script>
+      <script src="/node_modules/angular-ui-bootstrap/dist/ui-bootstrap.js"></script>
+      <script src="/node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js"></script>
       <script src="/js/angular/app.js"></script>
       <script src="/js/angular/shared/controllers/viewer.js"></script>
       <script src="/js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>		
@@ -27,6 +27,9 @@
             <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="/">MediaMaster</a>
+            <button type="button" class="btn btn-danger btn-sm" ng-click="closeAllWindows()" title="Close all open popup windows" style="margin-left: 15px; margin-top: 11px;">
+               <i class="fa fa-times"></i> Close All
+            </button>
          </div>
          <div id="navbar" class="navbar-collapse collapse">
             <form class="navbar-form navbar-right" role="form">
@@ -112,7 +115,7 @@
          <div class="thumbnail-grid">
                          <div ng-repeat="thumbnail in thumbnails track by $index" 
                   class="thumbnail-item" 
-                  ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height, thumbnail.fileType)">
+                  ng-click="viewFile(thumbnail.fullPath, thumbnail.width, thumbnail.height, thumbnail.fileType, $index)">
                
                <!-- Thumbnail image with aspect ratio preservation -->
                <div class="thumbnail-container" ng-show="thumbnail.fileType">

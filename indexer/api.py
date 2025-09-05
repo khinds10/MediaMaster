@@ -156,6 +156,90 @@ if action in ['add', 'remove', 'check']:
     # Return the response as JSON
     print(json.dumps(response))
 
+# Handle folder images action
+elif action == 'folder_images':
+    try:
+        # Get the full path of the current image
+        current_path = None
+        for i in arguments.keys():
+            if (arguments[i].name == "current_path"):
+                current_path = arguments[i].value
+                break
+        
+        # Debug: Log what we received
+        import sys
+        sys.stderr.write(f"DEBUG: action={action}, current_path={current_path}\n")
+        
+        if current_path:
+            # First, get the directory_name for the current file
+            current_file_query = f"SELECT directory_name FROM files_list WHERE full_path = '{current_path}'"
+            current_file_result = mysql.getAllRows(db, current_file_query)
+            
+            if current_file_result:
+                directory_name = current_file_result[0][0]
+                
+                # Get all images in the same directory, sorted by filename
+                folder_query = f"""
+                    SELECT * FROM files_list 
+                    WHERE directory_name = '{directory_name}' 
+                    AND (mime_type LIKE '%image/gif%' OR mime_type LIKE '%image/jpeg%' OR mime_type LIKE '%image/png%' 
+                         OR mime_type LIKE '%image/x-ms-bmp%' OR mime_type LIKE '%image/bmp%' 
+                         OR mime_type LIKE '%image/x-tga%' OR mime_type LIKE '%image/webp%')
+                    ORDER BY file_name ASC
+                """
+                
+                folderFiles = mysql.getAllRows(db, folder_query)
+            else:
+                folderFiles = []
+            
+            # Get all favorite file_ids for quick lookup
+            favorite_ids = set()
+            favorite_query = "SELECT file_id FROM favorites"
+            favorite_results = mysql.getAllRows(db, favorite_query)
+            if favorite_results:
+                favorite_ids = {row[0] for row in favorite_results}
+            
+            def getFileType(mimeType):
+                '''assign video or image file type based on known mime types '''
+                if mimeType.startswith( 'video/' ):
+                    return 'video'
+                if mimeType.startswith( 'application/vnd' ):
+                    return 'video'
+                if mimeType.startswith( 'audio/mpeg' ):
+                    return 'video'
+                return 'image'
+            
+            # Generate JSON response
+            results = []
+            if folderFiles:
+                for file in folderFiles:
+                    fileId,fullPath,directoryName,baseName,ext,fileName,mimeType,size,dateAccessed,dateModified,width,height,directoryId,thumbnail_exists = file
+                    
+                    # Handle null width/height values
+                    if width is None:
+                        width = 0
+                    if height is None:
+                        height = 0
+                        
+                    thumbnail = Thumbail()
+                    thumbnail.image = settings.thumbnailsRoot + getThumbForId(fileId)
+                    thumbnail.fullPath = fullPath
+                    thumbnail.fileType = getFileType(mimeType)
+                    thumbnail.fileId = fileId
+                    thumbnail.isFavorite = fileId in favorite_ids
+                    thumbnail.width = width
+                    thumbnail.height = height
+                    results.append(thumbnail.__dict__)
+            
+            response = {"results": results}
+            print(json.dumps(response))
+        else:
+            print(json.dumps({"error": "No current_path provided"}))
+    except Exception as e:
+        import sys
+        sys.stderr.write(f"ERROR in folder_images: {str(e)}\n")
+        print(json.dumps({"error": f"Server error: {str(e)}"}))
+
 # Handle query action (original query.py functionality)
 elif action == 'query':
     # page limit is the page number times the page size
