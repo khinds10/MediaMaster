@@ -240,6 +240,73 @@ elif action == 'folder_images':
         sys.stderr.write(f"ERROR in folder_images: {str(e)}\n")
         print(json.dumps({"error": f"Server error: {str(e)}"}))
 
+# Handle get file dimensions action
+elif action == 'get_file_dimensions':
+    # Get the file path
+    file_path = None
+    for i in arguments.keys():
+        if (arguments[i].name == "file_path"):
+            file_path = arguments[i].value
+            break
+    
+    # Debug logging
+    import sys
+    import os
+    import subprocess
+    sys.stderr.write(f"DEBUG: Looking for file dimensions: {file_path}\n")
+    
+    if file_path:
+        # First check if file exists on filesystem
+        if os.path.exists(file_path):
+            try:
+                # Use ffprobe to get video dimensions
+                cmd = [
+                    'ffprobe', 
+                    '-v', 'quiet', 
+                    '-print_format', 'json', 
+                    '-show_streams', 
+                    file_path
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                
+                if result.returncode == 0:
+                    import json
+                    probe_data = json.loads(result.stdout)
+                    
+                    # Find video stream and get dimensions
+                    width = 0
+                    height = 0
+                    for stream in probe_data.get('streams', []):
+                        if stream.get('codec_type') == 'video':
+                            width = stream.get('width', 0)
+                            height = stream.get('height', 0)
+                            break
+                    
+                    if width > 0 and height > 0:
+                        response = {"width": width, "height": height}
+                        sys.stderr.write(f"DEBUG: Found dimensions via ffprobe: {width}x{height}\n")
+                    else:
+                        response = {"error": "No video stream found"}
+                        sys.stderr.write("DEBUG: No video stream found in file\n")
+                else:
+                    response = {"error": f"ffprobe failed: {result.stderr}"}
+                    sys.stderr.write(f"DEBUG: ffprobe failed: {result.stderr}\n")
+                    
+            except subprocess.TimeoutExpired:
+                response = {"error": "ffprobe timeout"}
+                sys.stderr.write("DEBUG: ffprobe timeout\n")
+            except Exception as e:
+                response = {"error": f"Error running ffprobe: {str(e)}"}
+                sys.stderr.write(f"DEBUG: Error running ffprobe: {str(e)}\n")
+        else:
+            response = {"error": "File not found on filesystem"}
+            sys.stderr.write(f"DEBUG: File not found on filesystem: {file_path}\n")
+    else:
+        response = {"error": "No file_path provided"}
+        sys.stderr.write("DEBUG: No file_path provided\n")
+    
+    print(json.dumps(response))
+
 # Handle query action (original query.py functionality)
 elif action == 'query':
     # page limit is the page number times the page size
