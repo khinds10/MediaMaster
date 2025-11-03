@@ -102,6 +102,53 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
         // Array to track opened windows
         $scope.openedWindows = [];
         
+        // Fallback function to open video with original dimensions
+        $scope.openVideoWithDimensions = function(fullPath, width, height, padding) {
+            var videoWindowWidth = width + padding;
+            var videoWindowHeight = height + padding;
+            
+            var videoHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Video Player</title>
+                    <style>
+                        body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                        video { max-width: 100%; max-height: 100%; }
+                    </style>
+                </head>
+                <body>
+                    <video controls autoplay muted loop>
+                        <source src="${fullPath}" type="video/mp4">
+                        <source src="${fullPath}" type="video/webm">
+                        <source src="${fullPath}" type="video/ogg">
+                        Your browser does not support the video tag.
+                    </video>
+                </body>
+                </html>
+            `;
+            
+            // Calculate position for side-by-side placement
+            var position = $scope.getNextWindowPosition(videoWindowWidth, videoWindowHeight);
+            console.log('Fallback video window position:', position, 'size:', videoWindowWidth + 'x' + videoWindowHeight);
+            
+            // Open in new window with video player
+            var videoWindow = window.open('', '_blank', 'width=' + videoWindowWidth + ',height=' + videoWindowHeight + ',resizable=yes,scrollbars=yes');
+            videoWindow.document.write(videoHTML);
+            videoWindow.document.close();
+            
+            // Move window to calculated position
+            try {
+                videoWindow.moveTo(position.x, position.y);
+                console.log('Moved fallback video window to:', position.x, position.y);
+            } catch (e) {
+                console.log('Could not move fallback video window:', e);
+            }
+            
+            // Track the opened window
+            $scope.openedWindows.push(videoWindow);
+        };
+        
         // Track window positions for side-by-side placement
         $scope.windowPositions = {
             currentX: 50,  // Starting X position
@@ -206,17 +253,24 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    		console.log('Opening file:', fullPath, 'with dimensions:', width, 'x', height, 'fileType:', fileType);
 	    		
 	    		if (width && height && width > 0 && height > 0) {
-	    			// Calculate proportional size with max dimension of 1067
-	    			if (width > height) {
-	    				// Landscape image
-	    				windowWidth = Math.min(width, maxDimension) + padding;
-	    				windowHeight = Math.min(height * (maxDimension / width), maxDimension) + padding;
+	    			if (fileType === 'video') {
+	    				// For videos, use actual video dimensions
+	    				windowWidth = width + padding;
+	    				windowHeight = height + padding;
+	    				console.log('Video window size (actual dimensions):', windowWidth, 'x', windowHeight);
 	    			} else {
-	    				// Portrait image
-	    				windowHeight = Math.min(height, maxDimension) + padding;
-	    				windowWidth = Math.min(width * (maxDimension / height), maxDimension) + padding;
+	    				// For images, calculate proportional size with max dimension of 1067
+	    				if (width > height) {
+	    					// Landscape image
+	    					windowWidth = Math.min(width, maxDimension) + padding;
+	    					windowHeight = Math.min(height * (maxDimension / width), maxDimension) + padding;
+	    				} else {
+	    					// Portrait image
+	    					windowHeight = Math.min(height, maxDimension) + padding;
+	    					windowWidth = Math.min(width * (maxDimension / height), maxDimension) + padding;
+	    				}
+	    				console.log('Image window size (proportional):', windowWidth, 'x', windowHeight);
 	    			}
-	    			console.log('Calculated window size:', windowWidth, 'x', windowHeight);
 	    		} else {
 	    			// Fallback to default size if dimensions not available
 	    			windowWidth = 1333; // Increased from 1000 to 1333 (33% larger)
@@ -226,47 +280,91 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    		
 	    		// Check if it's a video file and create a muted video player
 	    		if (fileType === 'video') {
-	    			// Create a simple HTML page with muted video player
-	    			var videoHTML = `
-	    				<!DOCTYPE html>
-	    				<html>
-	    				<head>
-	    					<title>Video Player</title>
-	    					<style>
-	    						body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
-	    						video { max-width: 100%; max-height: 100%; }
-	    					</style>
-	    				</head>
-	    				<body>
-	    					<video controls autoplay muted loop>
-	    						<source src="${fullPath}" type="video/mp4">
-	    						<source src="${fullPath}" type="video/webm">
-	    						<source src="${fullPath}" type="video/ogg">
-	    						Your browser does not support the video tag.
-	    					</video>
-	    				</body>
-	    				</html>
-	    			`;
+	    			// Check if there's a -LG version available
+	    			var videoPath = fullPath;
+	    			var baseName = fullPath.substring(0, fullPath.lastIndexOf('.'));
+	    			var extension = fullPath.substring(fullPath.lastIndexOf('.'));
+	    			var lgPath = baseName + '-LG' + extension;
 	    			
-	    			// Calculate position for side-by-side placement
-	    			var position = $scope.getNextWindowPosition(windowWidth, windowHeight);
-	    			console.log('Video window position:', position, 'size:', windowWidth + 'x' + windowHeight);
+	    			console.log('Original video path:', fullPath);
+	    			console.log('Looking for -LG version:', lgPath);
 	    			
-	    			// Open in new window with video player
-	    			var videoWindow = window.open('', '_blank', 'width=' + windowWidth + ',height=' + windowHeight + ',resizable=yes,scrollbars=yes');
-	    			videoWindow.document.write(videoHTML);
-	    			videoWindow.document.close();
+	    			// Check if -LG version exists and get its dimensions
+	    			$http({
+	    				url: '/indexer/api.py',
+	    				method: 'GET',
+	    				params: {
+	    					action: 'get_file_dimensions',
+	    					file_path: lgPath
+	    				}
+	    			}).then(function(response) {
+	    				var lgWidth = width;
+	    				var lgHeight = height;
+	    				
+	    				if (response.data && response.data.width && response.data.height) {
+	    					lgWidth = response.data.width;
+	    					lgHeight = response.data.height;
+	    					console.log('Found -LG video dimensions:', lgWidth, 'x', lgHeight);
+	    				} else {
+	    					console.log('No -LG video found, using original dimensions');
+	    				}
+	    				
+	    				// Calculate window size for -LG video
+	    				var videoWindowWidth = lgWidth + padding;
+	    				var videoWindowHeight = lgHeight + padding;
+	    				console.log('Video window size (LG dimensions):', videoWindowWidth, 'x', videoWindowHeight);
+	    				
+	    				// Create video HTML with -LG path
+	    				var videoHTML = `
+	    					<!DOCTYPE html>
+	    					<html>
+	    					<head>
+	    						<title>Video Player</title>
+	    						<style>
+	    							body { margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+	    							video { max-width: 100%; max-height: 100%; }
+	    						</style>
+	    					</head>
+	    					<body>
+	    						<video controls autoplay muted loop>
+	    							<source src="${lgPath}" type="video/mp4">
+	    							<source src="${lgPath}" type="video/webm">
+	    							<source src="${lgPath}" type="video/ogg">
+	    							<source src="${fullPath}" type="video/mp4">
+	    							<source src="${fullPath}" type="video/webm">
+	    							<source src="${fullPath}" type="video/ogg">
+	    							Your browser does not support the video tag.
+	    						</video>
+	    					</body>
+	    					</html>
+	    				`;
+	    				
+	    				// Calculate position for side-by-side placement
+	    				var position = $scope.getNextWindowPosition(videoWindowWidth, videoWindowHeight);
+	    				console.log('Video window position:', position, 'size:', videoWindowWidth + 'x' + videoWindowHeight);
+	    				
+	    				// Open in new window with video player
+	    				var videoWindow = window.open('', '_blank', 'width=' + videoWindowWidth + ',height=' + videoWindowHeight + ',resizable=yes,scrollbars=yes');
+	    				videoWindow.document.write(videoHTML);
+	    				videoWindow.document.close();
+	    				
+	    				// Move window to calculated position
+	    				try {
+	    					videoWindow.moveTo(position.x, position.y);
+	    					console.log('Moved video window to:', position.x, position.y);
+	    				} catch (e) {
+	    					console.log('Could not move video window:', e);
+	    				}
+	    				
+	    				// Track the opened window
+	    				$scope.openedWindows.push(videoWindow);
+	    			}).catch(function(error) {
+	    				console.log('Error getting -LG dimensions, using original video:', error);
+	    				// Fallback to original video with original dimensions
+	    				$scope.openVideoWithDimensions(fullPath, width, height, padding);
+	    			});
 	    			
-	    			// Move window to calculated position
-	    			try {
-	    				videoWindow.moveTo(position.x, position.y);
-	    				console.log('Moved video window to:', position.x, position.y);
-	    			} catch (e) {
-	    				console.log('Could not move video window:', e);
-	    			}
-	    			
-	    			// Track the opened window
-	    			$scope.openedWindows.push(videoWindow);
+	    			return; // Exit early since we're handling video asynchronously
 	    		} else {
 	    			// For images, create a custom image viewer with folder navigation
 	    			var imageHTML = `
