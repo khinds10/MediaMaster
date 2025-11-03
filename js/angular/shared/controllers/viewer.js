@@ -298,6 +298,8 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    					file_path: lgPath
 	    				}
 	    			}).then(function(response) {
+	    				console.log('API response for -LG video:', response.data);
+	    				
 	    				var lgWidth = width;
 	    				var lgHeight = height;
 	    				
@@ -307,6 +309,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    					console.log('Found -LG video dimensions:', lgWidth, 'x', lgHeight);
 	    				} else {
 	    					console.log('No -LG video found, using original dimensions');
+	    					console.log('Response data:', response.data);
 	    				}
 	    				
 	    				// Calculate window size for -LG video
@@ -381,6 +384,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    							justify-content: center; 
 	    							align-items: center; 
 	    							height: 100vh; 
+
 	    							cursor: pointer;
 	    							overflow: hidden;
 	    						}
@@ -411,6 +415,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    					</style>
 	    				</head>
 	    				<body>
+
 	    					<div class="nav-info" id="navInfo">Use ← → arrow keys to navigate folder</div>
 	    					<div class="loading" id="loading">Loading folder images...</div>
 	    					<img src="${fullPath}" alt="Image" id="currentImage" style="display: none;">
@@ -449,6 +454,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    													if (folderImages[i].fullPath === currentPath) {
 	    														currentIndex = i;
 	    														break;
+
 	    													}
 	    												}
 	    												// Hide loading, show image
@@ -481,6 +487,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
 	    								currentIndex = index;
 	    								updateImageInfo();
 	    							}
+
 	    						}
 	    						
 	    						function updateImageInfo() {
