@@ -84,12 +84,12 @@
                      <ul class="pagination">
                         <li>
                            <a href="#" aria-label="First" ng-click="firstPage()">
-                           <span aria-hidden="true">&lt;&lt;</span>
+                           <img src="/img/arrow-double-left.svg" alt="First" class="pagination-arrow"/>
                            </a>
                         </li>
                         <li>
                            <a href="#" aria-label="Previous" ng-click="prevPage()">
-                           <span aria-hidden="true">&lt;</span>
+                           <img src="/img/arrow-left.svg" alt="Previous" class="pagination-arrow"/>
                            </a>
                         </li>
                         <li class="active">
@@ -97,7 +97,7 @@
                         </li>
                         <li>
                            <a href="#" aria-label="Next" ng-click="nextPage()">
-                           <span aria-hidden="true">&gt;</span>
+                           <img src="/img/arrow-right.svg" alt="Next" class="pagination-arrow"/>
                            </a>
                         </li>
                      </ul>
@@ -129,12 +129,25 @@
                   <img class="play-button-icon" 
                        ng-show="thumbnail.fileType=='video'" 
                        src="/img/play.png"/>
-                  
-                  <!-- Favorite star -->
-                  <i class="fa" 
-                     ng-class="{'fa-star': thumbnail.isFavorite, 'fa-star-o': !thumbnail.isFavorite}" 
-                     ng-click="toggleFavorite(thumbnail, $event)" 
-                     class="favorite-icon"></i>
+               </div>
+               
+               <!-- Media info panel -->
+               <div class="media-info-panel" ng-show="thumbnail.fileType" ng-click="$event.stopPropagation()">
+                  <img class="file-type-icon" 
+                       ng-src="/img/{{thumbnail.fileType == 'video' ? 'video' : (isGif(thumbnail.fullPath) ? 'gif' : 'image')}}.svg"
+                       alt="{{thumbnail.fileType}}"/>
+                  <span class="file-type-text" ng-if="getTopLevelFolderName(thumbnail.fullPath)">
+                     {{getTopLevelFolderName(thumbnail.fullPath)}}
+                  </span>
+                  <span class="file-type-text" ng-if="!getTopLevelFolderName(thumbnail.fullPath)">
+                     <span ng-show="thumbnail.fileType=='video'">Video</span>
+                     <span ng-show="thumbnail.fileType=='image'">Image</span>
+                  </span>
+                  <img class="star-icon" 
+                       ng-src="/img/{{thumbnail.isFavorite ? 'star-filled' : 'star-empty'}}.svg"
+                       ng-click="toggleFavorite(thumbnail, $event)"
+                       title="{{thumbnail.isFavorite ? 'Remove from favorites' : 'Add to favorites'}}"
+                       alt="Favorite"/>
                </div>
             </div>
          </div>
@@ -142,12 +155,20 @@
          <!-- Next page button at bottom -->
          <div class="next-page-container" ng-show="thumbnails.length > 0">
             <button class="btn btn-primary btn-lg next-page-button" ng-click="nextPage()">
-               <i class="fa fa-arrow-right"></i> Next Page
+               <img src="/img/arrow-right.svg" alt="Next" class="arrow-icon"/> Next Page
             </button>
          </div>
          <!-- /container -->
       </div>
       
       <!-- /viewerCtrl -->
+      
+      <!-- Favorite notification dialog -->
+      <div id="favoriteDialog" class="favorite-dialog" style="display: none;">
+         <div class="favorite-dialog-content">
+            <img id="favoriteDialogIcon" src="" alt="" style="width: 20px; height: 20px;"/>
+            <span id="favoriteDialogText"></span>
+         </div>
+      </div>
    </body>
 </html>

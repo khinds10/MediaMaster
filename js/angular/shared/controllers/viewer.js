@@ -76,6 +76,85 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
             $scope.getResults();
         };
         
+        // Helper function to check if file is a GIF
+        $scope.isGif = function(fullPath) {
+            if (!fullPath) return false;
+            return fullPath.toLowerCase().endsWith('.gif');
+        };
+        
+        // Helper function to extract folder name from path
+        // For "PN/GROWN/Emma/file.jpg" returns "Emma" (the folder containing the file)
+        $scope.getFolderName = function(fullPath) {
+            if (!fullPath) return '';
+            var pathParts = fullPath.split('/');
+            // Remove empty strings from split
+            pathParts = pathParts.filter(function(part) { return part.length > 0; });
+            
+            if (pathParts.length < 2) return '';
+            
+            // Return the folder containing the file (2nd-to-last element)
+            // For "PN/GROWN/Emma/file.jpg", this returns "Emma"
+            if (pathParts.length >= 2) {
+                return pathParts[pathParts.length - 2];
+            }
+            return '';
+        };
+        
+        // Helper function to extract top-level folder name from path
+        // For "PN/Grown/Emma/file.jpg" returns "Emma"
+        // For "PN/GROWN/Ema/Video/file.mp4" returns "Ema" (skips common folder names like Video/Images)
+        $scope.getTopLevelFolderName = function(fullPath) {
+            if (!fullPath) return '';
+            var pathParts = fullPath.split('/');
+            // Remove empty strings from split
+            pathParts = pathParts.filter(function(part) { return part.length > 0; });
+            
+            if (pathParts.length < 2) return '';
+            
+            // Common folder names to skip (case-insensitive)
+            var commonFolders = ['video', 'videos', 'image', 'images', 'photos', 'pictures', 'media'];
+            
+            // Get the folder containing the file (2nd-to-last element)
+            var immediateFolder = pathParts[pathParts.length - 2];
+            var immediateFolderLower = immediateFolder.toLowerCase();
+            
+            // If the immediate folder is a common folder name, get the one before it
+            if (commonFolders.indexOf(immediateFolderLower) !== -1 && pathParts.length >= 3) {
+                return pathParts[pathParts.length - 3];
+            }
+            
+            // Otherwise return the immediate folder
+            return immediateFolder;
+        };
+        
+        // Show favorite notification dialog
+        $scope.showFavoriteDialog = function(isFavorite) {
+            var dialog = document.getElementById('favoriteDialog');
+            var icon = document.getElementById('favoriteDialogIcon');
+            var text = document.getElementById('favoriteDialogText');
+            
+            if (isFavorite) {
+                icon.src = '/img/star-filled.svg';
+                text.textContent = 'Added to favorites';
+            } else {
+                icon.src = '/img/star-empty.svg';
+                text.textContent = 'Removed from favorites';
+            }
+            
+            // Show dialog with animation
+            dialog.style.display = 'flex';
+            dialog.style.animation = 'none';
+            // Trigger reflow to restart animation
+            setTimeout(function() {
+                dialog.style.animation = 'fadeInOut 2s ease-in-out';
+            }, 10);
+            
+            // Hide dialog after 2 seconds
+            setTimeout(function() {
+                dialog.style.display = 'none';
+            }, 2000);
+        };
+        
         // Toggle favorite status for a file
         $scope.toggleFavorite = function(thumbnail, event) {
             // Stop event propagation to prevent opening the file
@@ -84,6 +163,7 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
             }
             
             const action = thumbnail.isFavorite ? 'remove' : 'add';
+            const wasFavorite = thumbnail.isFavorite;
             
             $http({
                 url: '/indexer/api.py',
@@ -95,7 +175,11 @@ viewerCtrl.controller("viewerCtrl", [ '$scope', '$http', function($scope, $http)
             }).then(function(response) {
                 if (response.data.success) {
                     thumbnail.isFavorite = !thumbnail.isFavorite;
+                    // Show notification dialog
+                    $scope.showFavoriteDialog(thumbnail.isFavorite);
                 }
+            }).catch(function(error) {
+                console.error('Error toggling favorite:', error);
             });
         };
 
